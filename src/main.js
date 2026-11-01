@@ -1,4 +1,5 @@
-/* White Phantom Games launcher — frontend logic.
+/* Launcher — frontend logic. Studio-specific values come from config.js
+ * (generated from launcher.config.json by tools/configure.mjs).
  *
  * All real work (downloads, hashing, login) happens in Rust; this file just
  * calls commands and renders state. If opened in a normal browser (no Tauri),
@@ -7,6 +8,24 @@
 
 const tauri = window.__TAURI__;
 const hasTauri = !!(tauri && tauri.core);
+
+// ---------- studio config ----------
+const CFG = window.LAUNCHER_CONFIG || { studio: {}, launcher: {}, server: {}, links: {} };
+const STUDIO = CFG.studio.name || "Launcher";
+function applyBranding() {
+  document.title = CFG.launcher.productName || STUDIO;
+  const words = STUDIO.split(" ");
+  $("#brand-name").innerHTML = words.length > 1
+    ? `${escapeHtml(words.slice(0, -1).join(" "))} <span>${escapeHtml(words.at(-1))}</span>`
+    : escapeHtml(STUDIO);
+  if (CFG.launcher.logo) $("#brand-logo").src = CFG.launcher.logo;
+  try { $("#feed-domain").textContent = new URL(CFG.links.newsFeed || CFG.studio.website || "").host; } catch {}
+  if (CFG.launcher.codePrefix) $("#input-code").placeholder = `${CFG.launcher.codePrefix}-XXXX-XXXX-XXXX`;
+  document.querySelectorAll("[data-cfg]").forEach((el) => {
+    const v = el.dataset.cfg.split(".").reduce((o, k) => (o == null ? o : o[k]), CFG);
+    if (v != null) el.textContent = v;
+  });
+}
 
 // ---------- bridge ----------
 const bridge = hasTauri
@@ -105,8 +124,8 @@ function pendingVersion(g) {
 function upgradeUrl() {
   const a = state.account, sup = state.catalog?.support || {};
   if (!a || a.provider === "code") return null;
-  if (a.provider === "subscribestar") return sup.subscribestar || "https://subscribestar.art/white-phantom-games";
-  return sup.patreon || "https://www.patreon.com/whitephantomgames/membership";
+  if (a.provider === "subscribestar") return sup.subscribestar || CFG.links.subscribestar || null;
+  return sup.patreon || CFG.links.patreonUpgrade || CFG.links.patreon || null;
 }
 const dayOneName = () => state.catalog?.support?.dayOneTierName || "a Day 1 tier";
 function upgradeButton(label = "Upgrade") {
@@ -129,6 +148,7 @@ const dayLabel = (delayDays) => (delayDays > 0 ? `Day ${delayDays + 1} release` 
 
 // ---------- boot ----------
 async function boot() {
+  applyBranding();
   state.settings = await bridge.invoke("get_settings");
   state.account = await bridge.invoke("get_account");
   renderAccount();
@@ -188,7 +208,7 @@ function renderOffline() {
 
 async function loadFeed() {
   if (state.offline) { state.feed = []; state.feedError = "News isn't available offline."; renderFeed(); return; }
-  const url = state.catalog.newsFeed || "https://whitephantomgames.co.uk/rss.xml";
+  const url = state.catalog.newsFeed || CFG.links.newsFeed;
   try {
     state.feed = await bridge.invoke("get_news_feed", { url });
     state.feedError = null;
@@ -209,7 +229,7 @@ function renderFeed() {
       <a class="post-title" data-href="${escapeHtml(it.link)}">${escapeHtml(it.title)}</a>
       <div class="post-date">${fmtDate(it.date)}</div>
       ${it.summary ? `<p>${escapeHtml(it.summary)}</p>` : ""}
-    </div>`).join("") + `<a class="more" data-href="https://whitephantomgames.co.uk/news/">All news →</a>`;
+    </div>`).join("") + (CFG.links.newsPage ? `<a class="more" data-href="${escapeHtml(CFG.links.newsPage)}">All news →</a>` : "");
 }
 
 function renderGameNews(g) {
@@ -739,8 +759,11 @@ $("#btn-save-settings").onclick = async () => {
 };
 
 // external links
-$("#link-patreon").onclick = (e) => { e.preventDefault(); bridge.invoke("open_external", { url: "https://www.patreon.com/whitephantomgames" }); };
-$("#link-substar").onclick = (e) => { e.preventDefault(); bridge.invoke("open_external", { url: "https://subscribestar.art/white-phantom-games" }); };
+for (const [id, url] of [["#link-patreon", CFG.links.patreon], ["#link-substar", CFG.links.subscribestar]]) {
+  const a = $(id);
+  if (!url) { a.classList.add("hidden"); continue; }
+  a.onclick = (e) => { e.preventDefault(); bridge.invoke("open_external", { url }); };
+}
 
 function openModal(sel) { $(sel).classList.remove("hidden"); $("#login-status").textContent = ""; }
 function closeModals() { document.querySelectorAll(".modal").forEach((m) => m.classList.add("hidden")); }
@@ -767,9 +790,9 @@ function makeMockBridge() {
         case "login": await sleep(800); account = { provider: args.provider, displayName: "Preview Patron", tier: 1, tierName: "Supporter", delayDays: 7 }; return account;
         case "login_with_code": await sleep(500); if (!/^TEST/i.test(args.code)) throw "That code isn't valid."; account = { provider: "code", displayName: "Tester", tier: 3, tierName: "Day One (code)", delayDays: 0 }; return account;
         case "get_catalog": { if (location.hash === "#bundled") { return { catalog: await (await fetch("/__bundled-catalog/")).json(), offline: true, bundled: true }; } const r = await fetch(`${serverUrl}/catalog.json`); if (!r.ok) throw new Error(`HTTP ${r.status}`); return { catalog: await r.json(), offline: location.hash === "#offline" }; }
-        case "get_install_status": { const i = installed[args.gameId]; return { gameId: args.gameId, installed: !!i, installedVersion: i || null, latestVersion: args.latest, updateAvailable: !!i && i !== args.latest, installDir: "C:\\Users\\you\\Games\\White Phantom Games\\" + (args.title || args.gameId), busy: false }; }
-        case "get_install_defaults": return { installDir: "C:\\Users\\you\\Games\\White Phantom Games\\" + args.title, installRoot: "C:\\Users\\you\\Games\\White Phantom Games", freeBytes: 412 * 1024 ** 3 };
-        case "pick_install_root": await sleep(300); return { installDir: "D:\\Games\\White Phantom Games\\" + args.title, installRoot: "D:\\Games\\White Phantom Games", freeBytes: 1.2 * 1024 ** 4 };
+        case "get_install_status": { const i = installed[args.gameId]; return { gameId: args.gameId, installed: !!i, installedVersion: i || null, latestVersion: args.latest, updateAvailable: !!i && i !== args.latest, installDir: "C:\\Users\\you\\Games\\" + (CFG.launcher.installFolder || "Games") + "\\" + (args.title || args.gameId), busy: false }; }
+        case "get_install_defaults": return { installDir: "C:\\Users\\you\\Games\\" + (CFG.launcher.installFolder || "Games") + "\\" + args.title, installRoot: "C:\\Users\\you\\Games\\" + (CFG.launcher.installFolder || "Games"), freeBytes: 412 * 1024 ** 3 };
+        case "pick_install_root": await sleep(300); return { installDir: "D:\\Games\\" + (CFG.launcher.installFolder || "Games") + "\\" + args.title, installRoot: "D:\\Games\\" + (CFG.launcher.installFolder || "Games"), freeBytes: 1.2 * 1024 ** 4 };
         case "get_download_size": return 6071 * 1024 ** 2;
         case "get_cdn_json": { const r = await fetch(`${serverUrl}/${args.path}`); if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }
         case "get_achievement_progress": return { unlocked: ["Hallway Wanderer", "Night Owl"], total: 6, updated: new Date().toISOString() };

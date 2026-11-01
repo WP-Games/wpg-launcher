@@ -16,7 +16,7 @@ pub enum SigError {
     BadKey,
     #[error("signature file is malformed")]
     BadSignature,
-    #[error("signature check failed — the file was not signed by White Phantom Games")]
+    #[error("signature check failed — the file was not signed with this launcher's publisher key")]
     Mismatch,
 }
 

@@ -16,6 +16,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { config } from "./config.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(here, "..");
@@ -40,7 +41,7 @@ await fs.mkdir(outDir, { recursive: true });
 await fs.copyFile(path.join(nsisDir, exe), path.join(outDir, exe));
 await fs.copyFile(path.join(nsisDir, sigName), path.join(outDir, sigName));
 
-const base = "https://api.whitephantomgames.co.uk";
+const base = config.server.apiUrl;
 const url = `${base}/launcher/${version}/${encodeURIComponent(exe)}`;
 const latest = {
   version,

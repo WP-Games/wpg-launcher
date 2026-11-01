@@ -1,4 +1,4 @@
-# White Phantom Games Launcher
+# Game Launcher (White Phantom Games)
 
 A small, open-source game launcher for creators who distribute builds to
 Patreon / SubscribeStar supporters — the Steam-style experience (sign in,
@@ -31,6 +31,7 @@ files that changed between versions.
 
 ```
 WPG-Launcher/
+├── launcher.config.json  ← the only file you edit to make it yours
 ├── src/              Launcher UI (HTML/CSS/JS) — what players see
 ├── src-tauri/        Rust backend: login, downloads, hashing, launching games
 ├── tools/
@@ -39,6 +40,38 @@ WPG-Launcher/
 ├── cdn/              What gets uploaded to R2: catalog.json + games/<id>/…
 └── sample-game/      Two versions of a fake game for testing updates
 ```
+
+## 0. Make it yours — `launcher.config.json`
+
+Everything studio-specific is in one file at the repo root: studio name,
+website, contact e-mail, launcher product name and app identifier, the
+`Games\<folder>` install folder, the access-code prefix, the private-key
+folder, API domain, Worker name, R2 bucket, token lifetime, rate limit, RSS
+feed, news page and Patreon/SubscribeStar links. Edit it, then:
+
+```powershell
+npm run configure
+```
+
+That regenerates `src/config.js` (UI), `worker/wrangler.jsonc` (Cloudflare) and
+stamps `src-tauri/tauri.conf.json` (product name, identifier, updater URL —
+the updater public key is left alone). `dev`, `build`, `serve`, `test` and
+`worker:deploy` run it automatically, so you can't forget. The Rust code and
+the Worker include `launcher.config.json` directly. Nothing in `src/`,
+`src-tauri/`, `worker/` or `tools/` needs editing to rebrand; `npm test`
+fails if the generated files are stale.
+
+Things that are *not* in the config, on purpose: secrets (`.env`, Worker
+secrets, private keys), the tier/code mapping (`tools/tiers.json`), game
+content (`cdn/catalog.json`), and the two brand colours in `src/styles.css`
+(`--patreon`, `--substar`) which are the platforms', not yours. Your logo is
+`src/logo.png` and the installer icons are `src-tauri/icons/` (`npm run tauri
+icon your.png` regenerates them).
+
+The rest of this README uses White Phantom Games' real values
+(`api.whitephantomgames.co.uk`, bucket `wpg-cdn`, key folder `.wpg`, codes
+`WPG-…`) as worked examples — read them as "whatever you put in
+`launcher.config.json`".
 
 ## 1. One-time setup (Windows)
 

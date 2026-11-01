@@ -1,5 +1,5 @@
 /**
- * White Phantom Games launcher backend — Cloudflare Worker.
+ * Launcher backend — Cloudflare Worker. Studio settings: launcher.config.json.
  *
  * Replaces tools/serve.mjs in production. Speaks exactly the protocol the
  * launcher already uses:
@@ -18,6 +18,7 @@
 import * as patreon from "../../tools/patreon.mjs";
 import * as substar from "../../tools/subscribestar.mjs";
 import tiers from "../../tools/tiers.json";
+import cfg from "../../launcher.config.json";
 import { resolveCode } from "../../tools/codes-lib.mjs";
 import { withAccess, versionAccess, delayDaysFor } from "../../tools/access-lib.mjs";
 import { seal, open, randomHex } from "./crypto.mjs";
@@ -55,7 +56,7 @@ export default {
       if (request.method !== "GET" && request.method !== "HEAD") return text(405, "method not allowed");
 
       let m;
-      if (p === "/" || p === "/health") return text(200, "wpg-launcher-api ok");
+      if (p === "/" || p === "/health") return text(200, `${cfg.server.workerName} ok`);
       if (p === "/catalog.json") return serveR2(env, request, "catalog.json", { public: true, cache: "no-cache" });
       if (p === "/catalog.json.sig") return serveR2(env, request, "catalog.json.sig", { public: true, cache: "no-cache" });
       if (p.startsWith("/auth/") && env.AUTH_LIMITER) {
@@ -188,9 +189,9 @@ async function launcherDownload(env) {
   return Response.redirect(url, 302);
 }
 
-const SECURITY_TXT = `Contact: mailto:info@whitephantomgames.co.uk
+const SECURITY_TXT = `Contact: mailto:${cfg.studio.contactEmail}
 Preferred-Languages: en
-Policy: https://whitephantomgames.co.uk/privacy
+Policy: ${cfg.studio.privacyUrl || cfg.studio.website}
 Expires: 2027-12-31T00:00:00.000Z
 `;
 

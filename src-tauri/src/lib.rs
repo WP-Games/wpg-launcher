@@ -1,5 +1,6 @@
 mod auth;
 mod cdc;
+mod config;
 mod news;
 mod signing;
 mod store;
@@ -48,7 +49,7 @@ impl AppState {
             .map(PathBuf::from)
             .unwrap_or_else(|| self.app_data.clone())
             .join("Games")
-            .join("White Phantom Games")
+            .join(&config::config().launcher.install_folder)
     }
 }
 
@@ -644,7 +645,7 @@ pub fn run() {
             let app_data = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_data)?;
             let client = reqwest::Client::builder()
-                .user_agent(format!("WPG-Launcher/{}", env!("CARGO_PKG_VERSION")))
+                .user_agent(format!("{}-Launcher/{}", config::config().launcher.product_name.replace(' ', ""), env!("CARGO_PKG_VERSION")))
                 .build()?;
             app.manage(AppState {
                 app_data,
@@ -679,5 +680,5 @@ pub fn run() {
             open_external,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running White Phantom Games launcher");
+        .expect("error while running the launcher");
 }

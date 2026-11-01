@@ -4,7 +4,7 @@
  *
  *   npm run keygen
  *
- * Writes the PRIVATE key to %USERPROFILE%\.wpg\manifest-signing.key (never
+ * Writes the PRIVATE key to %USERPROFILE%\<launcher.keyDir>\manifest-signing.key (never
  * inside the project) and the PUBLIC key to src-tauri/signing.pub (committed,
  * compiled into the launcher). Refuses to overwrite an existing private key:
  * rotating keys means shipping a new launcher first, so it's deliberate.

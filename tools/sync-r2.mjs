@@ -29,7 +29,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(here, "..");
 const CDN = path.join(ROOT, "cdn");
 const WORKER = path.join(ROOT, "worker");
-const BUCKET = "wpg-cdn";
+import { config } from "./config.mjs";
+const BUCKET = config.server.bucket;
+const API = config.server.apiUrl;
 const dry = process.argv.includes("--dry-run");
 const local = process.argv.includes("--local");
 const statePath = path.join(CDN, ".r2-uploaded.json");
@@ -81,7 +83,7 @@ if (rcloneOk) {
   run("Game files (new objects only)…", ["copy", CDN, `r2:${BUCKET}`, ...common, "--filter", "+ games/*/objects/**", "--filter", "- **", "--ignore-existing"]);
   // 2) everything else (catalog, manifests, artwork): small, compared by checksum
   run("Catalog, manifests, artwork…", ["copy", CDN, `r2:${BUCKET}`, ...common, "--filter", "- games/*/objects/**", "--checksum"]);
-  console.log(`\nDone. https://api.whitephantomgames.co.uk/catalog.json is up to date.`);
+  console.log(`\nDone. ${API}/catalog.json is up to date.`);
   process.exit(0);
 }
 
@@ -126,4 +128,4 @@ for (const f of todo) {
     await fs.writeFile(statePath, JSON.stringify([...uploaded], null, 0));
   }
 }
-console.log(`\nDone. ${local ? "Local bucket" : "https://api.whitephantomgames.co.uk/catalog.json"} is up to date.`);
+console.log(`\nDone. ${local ? "Local bucket" : `${API}/catalog.json`} is up to date.`);

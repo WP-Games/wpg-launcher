@@ -6,8 +6,8 @@
  * The private key never leaves your PC; the public key is compiled into the
  * launcher (src-tauri/signing.pub). No identity, CA or registration involved.
  *
- * Key location (private): %USERPROFILE%\.wpg\manifest-signing.key
- *   — or wherever WPG_SIGNING_KEY points. Back it up somewhere safe and
+ * Key location (private): %USERPROFILE%\<launcher.keyDir>\manifest-signing.key
+ *   — or wherever LAUNCHER_SIGNING_KEY points. Back it up somewhere safe and
  *   offline: lose it and you must ship a new launcher before any new game
  *   version can be installed.
  *
@@ -15,11 +15,11 @@
  */
 import { promises as fs } from "node:fs";
 import { createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from "node:crypto";
-import os from "node:os";
 import path from "node:path";
+import { keyDir } from "./config.mjs";
 
-export const DEFAULT_KEY_PATH = path.join(os.homedir(), ".wpg", "manifest-signing.key");
-export const keyPath = () => process.env.WPG_SIGNING_KEY || DEFAULT_KEY_PATH;
+export const DEFAULT_KEY_PATH = path.join(keyDir, "manifest-signing.key");
+export const keyPath = () => process.env.LAUNCHER_SIGNING_KEY || process.env.WPG_SIGNING_KEY || DEFAULT_KEY_PATH;
 
 /** Raw 32-byte Ed25519 public key as base64 — what gets embedded in the launcher. */
 export function rawPublicKeyB64(privateKeyPem) {
@@ -39,7 +39,7 @@ export async function loadPrivateKey() {
   try {
     return await fs.readFile(p, "utf8");
   } catch {
-    throw new Error(`No signing key at ${p}. Run: npm run keygen   (or set WPG_SIGNING_KEY)`);
+    throw new Error(`No signing key at ${p}. Run: npm run keygen   (or set LAUNCHER_SIGNING_KEY)`);
   }
 }
 

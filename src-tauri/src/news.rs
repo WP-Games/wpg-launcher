@@ -1,4 +1,4 @@
-//! "What's New" — pulls the website's RSS feed (whitephantomgames.co.uk/rss.xml)
+//! "What's New" — pulls the studio website's RSS feed (links.newsFeed in launcher.config.json)
 //! so every game in the launcher shows the same site news.
 
 use serde::Serialize;

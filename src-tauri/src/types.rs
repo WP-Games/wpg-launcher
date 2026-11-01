@@ -21,7 +21,7 @@ pub struct Catalog {
 }
 
 pub fn default_news_feed() -> String {
-    "https://whitephantomgames.co.uk/rss.xml".to_string()
+    crate::config::config().links.news_feed.clone()
 }
 
 /// A short per-game announcement pushed via catalog.json ("Game News").
@@ -203,7 +203,7 @@ pub struct Settings {
     #[serde(default)]
     pub account: Option<Account>,
     /// Folder new games are installed under (each game gets its own subfolder).
-    /// None → `<home>/Games/White Phantom Games`.
+    /// None → `<home>/Games/<launcher.installFolder from launcher.config.json>`.
     #[serde(default)]
     pub install_root: Option<String>,
 }
@@ -213,7 +213,7 @@ impl Default for Settings {
         Self {
             // Production backend. For local testing against tools/serve.mjs,
             // change it in Settings → Content server (http://127.0.0.1:8787).
-            server_url: "https://api.whitephantomgames.co.uk".to_string(),
+            server_url: crate::config::config().server.api_url.clone(),
             token: None,
             account: None,
             install_root: None,

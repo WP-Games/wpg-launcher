@@ -1,0 +1,37 @@
+{
+  "$comment": "Everything studio-specific lives here. Edit this file, then `npm run configure` (dev/build/deploy run it for you). Nothing in src/, src-tauri/, worker/ or tools/ needs touching to rebrand the launcher. Secrets never go in this file.",
+
+  "studio": {
+    "name": "White Phantom Games",
+    "shortName": "WPG",
+    "website": "https://whitephantomgames.co.uk",
+    "contactEmail": "info@whitephantomgames.co.uk",
+    "privacyUrl": "https://whitephantomgames.co.uk/privacy"
+  },
+
+  "launcher": {
+    "productName": "White Phantom Games",
+    "identifier": "uk.co.whitephantomgames.launcher",
+    "installFolder": "White Phantom Games",
+    "codePrefix": "WPG",
+    "keyDir": ".wpg",
+    "logo": "logo.png"
+  },
+
+  "server": {
+    "apiUrl": "https://api.whitephantomgames.co.uk",
+    "customDomain": "api.whitephantomgames.co.uk",
+    "workerName": "wpg-launcher-api",
+    "bucket": "wpg-cdn",
+    "tokenDays": 7,
+    "authRateLimit": { "limit": 30, "period": 10 }
+  },
+
+  "links": {
+    "newsFeed": "https://whitephantomgames.co.uk/rss.xml",
+    "newsPage": "https://whitephantomgames.co.uk/news/",
+    "patreon": "https://www.patreon.com/whitephantomgames",
+    "patreonUpgrade": "https://www.patreon.com/whitephantomgames/membership",
+    "subscribestar": "https://subscribestar.art/white-phantom-games"
+  }
+}

@@ -1,4 +1,4 @@
-## launcher_sync.rpy — White Phantom Games launcher integration.
+## launcher_sync.rpy — launcher integration (achievements & play-time sync).
 ##
 ## Drop this file into the game's `game/` folder. It needs no other changes.
 ##

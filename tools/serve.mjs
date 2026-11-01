@@ -20,6 +20,7 @@ import { randomBytes } from "node:crypto";
 import * as patreon from "./patreon.mjs";
 import { resolveCode } from "./codes-lib.mjs";
 import { withAccess, versionAccess, delayDaysFor } from "./access-lib.mjs";
+import { config } from "./config.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -160,7 +161,7 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, page(`${name} (mock)`, `
         <span class="tag">LOCAL TEST — no real ${name} involved${provider === "patreon" ? " (add PATREON_CLIENT_ID/SECRET to .env for real login)" : ""}</span>
         <h1 style="color:${colour}">Sign in with ${name}</h1>
-        <p>White Phantom Games Launcher wants to see your membership tier. Pick the tier to pretend you're on:</p>
+        <p>${config.launcher.productName} Launcher wants to see your membership tier. Pick the tier to pretend you're on:</p>
         <form method="GET" action="/auth/${provider}/allow">
           <input type="hidden" name="redirect_uri" value="${redirect}"><input type="hidden" name="state" value="${state}">
           <label><input type="text" name="name" value="Test Patron" style="background:transparent;border:0;color:#fff;font:inherit;width:100%"></label>
@@ -248,7 +249,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`WPG local server`);
+  console.log(`${config.studio.name} local server`);
   console.log(`  CDN root : ${CDN}`);
   console.log(`  Launcher : point Settings → Content server at http://127.0.0.1:${PORT}`);
   console.log(`  Preview  : http://127.0.0.1:${PORT}/  (UI in a browser, with fake downloads)`);

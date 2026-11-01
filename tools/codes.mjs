@@ -19,13 +19,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import { normalizeCode } from "./codes-lib.mjs";
+import { config } from "./config.mjs";
 export { normalizeCode, resolveCode } from "./codes-lib.mjs";
 
 function generateCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
   const bytes = randomBytes(12);
   const chars = [...bytes].map((b) => alphabet[b % alphabet.length]).join("");
-  return `WPG-${chars.slice(0, 4)}-${chars.slice(4, 8)}-${chars.slice(8, 12)}`;
+  return `${config.launcher.codePrefix}-${chars.slice(0, 4)}-${chars.slice(4, 8)}-${chars.slice(8, 12)}`;
 }
 
 // ---- CLI ----
