@@ -2,7 +2,10 @@
 /**
  * publish.mjs — turn a game build folder into launcher-ready CDN files.
  *
- *   node tools/publish.mjs <gameId> <version> <buildFolder> [--exe Game.exe] [--notes "text"] [--cdn ./cdn]
+ *   node tools/publish.mjs <gameId> <version> <buildFolder> [--exe Game.exe] [--notes "text"] [--release-date 2026-11-08T18:00Z] [--cdn ./cdn]
+ *
+ *   --release-date  when Day-1 tiers get it (default: now). Other tiers unlock
+ *                   releasedAt + their delayDays from tools/tiers.json "levels".
  *
  * Example (Ren'Py "Build Distributions" → pc folder):
  *   node tools/publish.mjs midnight-manor 0.4.0 "D:\renpy\MidnightManor-0.4.0-pc" --exe MidnightManor.exe --notes "New chapter 4"
@@ -43,12 +46,15 @@ const opt = (name, def) => {
 };
 const [gameId, version, buildDir] = positional;
 if (!gameId || !version || !buildDir) {
-  console.error("usage: node tools/publish.mjs <gameId> <version> <buildFolder> [--exe Game.exe] [--notes text] [--cdn ./cdn]");
+  console.error("usage: node tools/publish.mjs <gameId> <version> <buildFolder> [--exe Game.exe] [--notes text] [--release-date ISO] [--cdn ./cdn]");
   process.exit(1);
 }
 const here = path.dirname(fileURLToPath(import.meta.url));
 const cdn = path.resolve(opt("cdn", path.join(here, "..", "cdn")));
 const notes = opt("notes", "");
+const releasedAtMs = Date.parse(opt("release-date", new Date().toISOString()));
+if (!Number.isFinite(releasedAtMs)) { console.error("--release-date must be an ISO date, e.g. 2026-11-08 or 2026-11-08T18:00Z"); process.exit(1); }
+const releasedAt = new Date(releasedAtMs).toISOString();
 
 async function* walk(dir) {
   for (const d of await fs.readdir(dir, { withFileTypes: true })) {
@@ -155,11 +161,11 @@ if (!game) {
 }
 game.latest = version;
 game.versions = game.versions.filter((v) => v.version !== version);
-game.versions.unshift({ version, date: new Date().toISOString().slice(0, 10), notes });
+game.versions.unshift({ version, date: releasedAt.slice(0, 10), releasedAt, notes });
 await fs.writeFile(catalogPath, JSON.stringify(catalog, null, 2));
 await signFile(signingKey, catalogPath);
 
-console.log(`\n\nPublished ${gameId} v${version}`);
+console.log(`\n\nPublished ${gameId} v${version}  (Day-1 release ${releasedAt}; other tiers per tools/tiers.json levels.delayDays)`);
 console.log(`  ${files.length} files, ${(total / 1048576).toFixed(1)} MB total`);
 const mb = (n) => `${((n || 0) / 1048576).toFixed(1)} MB`;
 if (Object.keys(byPlatform).length > 1) {

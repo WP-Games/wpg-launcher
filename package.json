@@ -1,6 +1,6 @@
 {
   "name": "wpg-launcher",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "White Phantom Games launcher \u2014 Tauri desktop app + publish tooling",
   "type": "module",

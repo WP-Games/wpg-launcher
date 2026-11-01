@@ -19,7 +19,7 @@ export function resolveCode(code, tiersConfig) {
         displayName: v.name || "Tester",
         avatar: "",
         tier: Number(v.level) || 0,
-        tierName: v.tierName || (v.level >= 4 ? "Ultimate (code)" : v.level >= 3 ? "Premium (code)" : v.level >= 2 ? "Supporter (code)" : "Tester"),
+        tierName: v.tierName || (tiersConfig?.levels?.[String(v.level)]?.name ? `${tiersConfig.levels[String(v.level)].name} (code)` : `Level ${v.level} (code)`),
         patronStatus: "code",
       };
     }

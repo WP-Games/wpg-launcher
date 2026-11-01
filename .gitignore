@@ -7,6 +7,7 @@
 !.env.example
 worker/.dev.vars
 /tools/tiers.json
+/tools/tiers.json.bak*
 
 # --- game content / published files (lives in R2, not in git) ---
 /cdn/

@@ -291,7 +291,7 @@ need free disk space equal to the build size the first time.
 ### Access codes (testers, friends)
 
 ```powershell
-npm run code -- new "Dev friend" 2     # prints WPG-XXXX-XXXX-XXXX; level 2 = Supporter view
+npm run code -- new "Dev friend" 3     # prints WPG-XXXX-XXXX-XXXX; level 3 = Day One access
 npm run code -- list
 npm run code -- revoke WPG-XXXX-XXXX-XXXX
 npm run worker:deploy                  # after any change
@@ -305,6 +305,49 @@ start (or within 7 days); installed games keep playing as always.
 
 `tools/tiers.json` is bundled into the Worker, so after editing it (new tier,
 an override for a tester) run `npm run worker:deploy`.
+
+### Release windows (Day 1 / Day 4 / Day 8 access)
+
+Patreon-style staggered releases are built in. `tools/tiers.json` → `levels`
+defines each access level once, with how long after a Day-1 release it may
+download a new version:
+
+```json
+"levels": {
+  "0": { "name": "No game access" },
+  "1": { "name": "Supporter",   "delayDays": 7 },
+  "2": { "name": "Law Student", "delayDays": 3 },
+  "3": { "name": "Day One",     "delayDays": 0 },
+  "4": { "name": "Creator",     "delayDays": 0 }
+}
+```
+
+Every Patreon tier id, SubscribeStar price rule and access code maps to one
+of those levels (`node tools/patreon-tiers.mjs <creator token>` lists your
+tiers, grandfathered ones included, and keeps any levels you've already set).
+A game's `requiredTier` is the floor — below it nothing downloads.
+
+`publish.mjs` stamps each version with `releasedAt` (now, or
+`--release-date 2026-11-08T18:00Z` to schedule). The Worker refuses a
+manifest until `releasedAt + delayDays` for the player's level (403 with an
+`X-Available-At` header); the launcher shows the newest version the player
+*can* get as "Latest", and a note like "v0.23.0 is out for Day 1 tiers — on
+Supporter (Day 8 release) it unlocks for you on Sun 15 Nov, 18:00". The
+changelog marks not-yet-unlocked versions too. Older versions stay
+downloadable, installed games always play.
+
+Every locked state carries an **Upgrade** button (or **Re-subscribe** for a
+lapsed patron) that opens the player's own provider — Patreon members go to
+Patreon, SubscribeStar members to SubscribeStar; code users see no button.
+The destinations and the tier named in the note come from `catalog.json`:
+
+```json
+"support": {
+  "patreon": "https://www.patreon.com/whitephantomgames/membership",
+  "subscribestar": "https://subscribestar.art/white-phantom-games",
+  "dayOneTierName": "Premium Supporter (£10)"
+}
+```
 
 ### Useful
 

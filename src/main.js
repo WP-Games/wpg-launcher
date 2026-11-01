@@ -81,12 +81,58 @@ const assetUrl = (rel) => {
 };
 const canAccess = (game) => game.requiredTier === 0 || (state.account && state.account.tier >= game.requiredTier);
 
+// ---------- release windows ----------
+// Day-1 tiers get a new version the moment it's published; other tiers after
+// their `delayDays` (sent with the account). The launcher aims at the newest
+// version the player can actually download, and says when the next one unlocks.
+const DAY_MS = 86_400_000;
+const releasedAtMs = (v) => { const t = Date.parse(v.releasedAt || v.date || ""); return Number.isFinite(t) ? t : 0; };
+const unlockAtMs = (v) => releasedAtMs(v) + ((state.account && state.account.delayDays) || 0) * DAY_MS;
+const versionUnlocked = (v, now = Date.now()) => now >= unlockAtMs(v);
+/** Newest version this player may download (falls back to `latest`). */
+function targetVersion(g) {
+  if (!state.account || !canAccess(g) || !(g.versions || []).length) return g.latest;
+  const open = g.versions.find((v) => versionUnlocked(v)); // newest-first
+  return open ? open.version : g.latest;
+}
+/** The newer version that's published but not yet open to this player, if any. */
+function pendingVersion(g) {
+  if (!state.account || !canAccess(g) || !(g.versions || []).length) return null;
+  const newest = g.versions[0];
+  return newest.version !== targetVersion(g) ? { version: newest.version, at: new Date(unlockAtMs(newest)) } : null;
+}
+/** Where "Upgrade" sends this player: their own provider's tier page (catalog.support can override). */
+function upgradeUrl() {
+  const a = state.account, sup = state.catalog?.support || {};
+  if (!a || a.provider === "code") return null;
+  if (a.provider === "subscribestar") return sup.subscribestar || "https://subscribestar.art/white-phantom-games";
+  return sup.patreon || "https://www.patreon.com/whitephantomgames/membership";
+}
+const dayOneName = () => state.catalog?.support?.dayOneTierName || "a Day 1 tier";
+function upgradeButton(label = "Upgrade") {
+  const url = upgradeUrl();
+  if (!url) return "";
+  const brand = state.account.provider === "subscribestar" ? "substar" : "patreon";
+  return `<button class="btn-upgrade ${brand}" data-act="upgrade" data-url="${escapeHtml(url)}">${escapeHtml(label)}</button>`;
+}
+function wireNote(locked) {
+  const up = locked.querySelector("[data-act=upgrade]");
+  if (up) locked.prepend(up); // floats right; must come first in the flow to sit at the top
+  if (up) up.onclick = () => bridge.invoke("open_external", { url: up.dataset.url }).catch((e) => toast(String(e), true));
+  const rc = locked.querySelector("[data-act=refresh]");
+  if (rc) rc.onclick = recheckTier;
+  const li = locked.querySelector("[data-act=login]");
+  if (li) li.onclick = () => openModal("#modal-login");
+}
+const fmtDateTime = (d) => d.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const dayLabel = (delayDays) => (delayDays > 0 ? `Day ${delayDays + 1} release` : "Day 1 release");
+
 // ---------- boot ----------
 async function boot() {
   state.settings = await bridge.invoke("get_settings");
   state.account = await bridge.invoke("get_account");
   renderAccount();
-  $("#about-line").textContent = `Launcher v0.1.0 · ${hasTauri ? "Tauri" : "browser preview"}`;
+  $("#about-line").textContent = `Launcher v0.1.1 · ${hasTauri ? "Tauri" : "browser preview"}`;
 
   bridge.listen("install-progress", onProgress);
   bridge.listen("game-exited", (gameId) => { loadAchievements(gameId, true); });
@@ -99,7 +145,7 @@ async function boot() {
   await loadCatalog();
   // Re-check tier quietly in the background on each start.
   if (state.account) {
-    bridge.invoke("refresh_account").then((acc) => { state.account = acc; renderAccount(); renderDetail(); }).catch(() => {});
+    bridge.invoke("refresh_account").then((acc) => { state.account = acc; return accountChanged(); }).catch(() => {});
   }
 }
 
@@ -185,7 +231,15 @@ document.addEventListener("click", (e) => {
   bridge.invoke("open_external", { url: a.dataset.href }).catch((err) => toast(String(err), true));
 });
 
-const refreshStatus = (g) => bridge.invoke("get_install_status", { gameId: g.id, latest: g.latest, title: g.title });
+const refreshStatus = (g) => bridge.invoke("get_install_status", { gameId: g.id, latest: targetVersion(g), title: g.title });
+/** After sign-in/out or a tier re-check: what counts as "latest" may have changed. */
+async function accountChanged() {
+  renderAccount();
+  for (const g of state.catalog?.games || []) {
+    try { state.status[g.id] = await refreshStatus(g); } catch {}
+  }
+  renderList(); renderDetail();
+}
 
 // ---------- launcher self-update ----------
 async function checkLauncherUpdate() {
@@ -224,9 +278,7 @@ function renderAccount() {
   $("#btn-logout").onclick = async () => {
     await bridge.invoke("logout");
     state.account = null;
-    renderAccount();
-    renderList();
-    renderDetail();
+    await accountChanged();
   };
 }
 
@@ -237,7 +289,7 @@ function renderList() {
     const st = state.status[g.id] || {};
     let dot = "", sub = "";
     if (g.comingSoon) { sub = "Coming soon"; }
-    else if (st.installed && st.updateAvailable) { dot = "update"; sub = canAccess(g) ? `Update to ${g.latest}` : `Installed · v${g.latest} available`; }
+    else if (st.installed && st.updateAvailable) { dot = "update"; sub = canAccess(g) ? `Update to ${targetVersion(g)}` : `Installed · v${g.latest} available`; }
     else if (st.installed) { dot = "installed"; sub = `Installed · ${st.installedVersion}`; }
     else if (!canAccess(g)) { dot = "locked"; sub = `Needs ${g.requiredTierName || "higher tier"}`; }
     else { sub = "Not installed"; }
@@ -276,7 +328,10 @@ function renderDetail() {
 
   const cl = $("#changelog");
   $("#history-wrap").classList.toggle("hidden", !(g.versions || []).length);
-  cl.innerHTML = g.versions.map((v) => `<div class="entry"><div class="entry-head"><b>v${escapeHtml(v.version)}</b><span>${fmtDate(v.date || "")}</span></div><p>${renderInline(v.notes || "")}</p></div>`).join("");
+  cl.innerHTML = g.versions.map((v) => {
+    const soon = state.account && canAccess(g) && !versionUnlocked(v);
+    return `<div class="entry${soon ? " pending" : ""}"><div class="entry-head"><b>v${escapeHtml(v.version)}</b><span>${soon ? `unlocks for you ${fmtDate(unlockAtMs(v))}` : fmtDate(v.date || "")}</span></div><p>${renderInline(v.notes || "")}</p></div>`;
+  }).join("");
 
   renderAction();
 }
@@ -297,6 +352,8 @@ function renderAction() {
   locked.classList.remove("info");
 
   const access = canAccess(g);
+  const target = targetVersion(g);
+  const pending = pendingVersion(g);
   const playBtn = () => {
     btn.textContent = "Play";
     btn.classList.add("play");
@@ -314,27 +371,27 @@ function renderAction() {
   } else if (busy) {
     btn.textContent = p.phase === "planning" ? "Preparing…" : p.phase === "finalizing" ? "Installing…" : "Downloading…";
     btn.disabled = true;
-    vline.innerHTML = `Installing <b>v${escapeHtml(g.latest)}</b>`;
+    vline.innerHTML = `Installing <b>v${escapeHtml(target)}</b>`;
   } else if (st.installed && st.updateAvailable && access && !state.offline) {
     btn.textContent = "Update";
     btn.classList.add("update");
     btn.onclick = () => startInstall(g);
-    vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> → update to <b>v${escapeHtml(g.latest)}</b>`;
+    vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> → update to <b>v${escapeHtml(target)}</b>`;
   } else if (st.installed) {
     // Installed games always play — what you downloaded is yours, whatever
     // happens to your subscription or your connection.
     playBtn();
     if (st.updateAvailable && state.offline) {
-      vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> · update to v${escapeHtml(g.latest)} waiting for a connection`;
+      vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> · update to v${escapeHtml(target)} waiting for a connection`;
     } else if (st.updateAvailable) {
       vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> · <b>v${escapeHtml(g.latest)}</b> available`;
       locked.innerHTML = state.account
         ? `Version ${escapeHtml(g.latest)} is available to <b>${escapeHtml(g.requiredTierName || "supporters")}</b>. You're currently on <b>${escapeHtml(state.account.tierName || "Tier " + state.account.tier)}</b> — your installed version keeps working. <a data-act="refresh">Just re-subscribed? Re-check</a>`
         : `Version ${escapeHtml(g.latest)} is available to <b>${escapeHtml(g.requiredTierName || "supporters")}</b>. <a data-act="login">Sign in</a> to update — your installed version keeps working.`;
+      if (state.account) locked.innerHTML += ` ${upgradeButton("Re-subscribe")}`;
       locked.classList.remove("hidden");
       locked.classList.add("info");
-      locked.querySelector("[data-act=refresh]") && (locked.querySelector("[data-act=refresh]").onclick = recheckTier);
-      locked.querySelector("[data-act=login]") && (locked.querySelector("[data-act=login]").onclick = () => openModal("#modal-login"));
+      wireNote(locked);
     } else {
       vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> · up to date`;
     }
@@ -349,14 +406,23 @@ function renderAction() {
     btn.onclick = () => (state.account ? null : openModal("#modal-login"));
     vline.innerHTML = `Latest <b>v${escapeHtml(g.latest)}</b>`;
     if (state.account) {
-      locked.innerHTML = `This game needs the <b>${escapeHtml(g.requiredTierName || "higher")}</b> tier. You're currently on <b>${escapeHtml(state.account.tierName || "Tier " + state.account.tier)}</b>. <a data-act="refresh">Just upgraded? Re-check</a>`;
+      locked.innerHTML = `This game needs the <b>${escapeHtml(g.requiredTierName || "higher")}</b> tier. You're currently on <b>${escapeHtml(state.account.tierName || "Tier " + state.account.tier)}</b>. <a data-act="refresh">Just upgraded? Re-check</a> ${upgradeButton()}`;
       locked.classList.remove("hidden");
-      locked.querySelector("[data-act=refresh]").onclick = recheckTier;
+      wireNote(locked);
     }
   } else {
     btn.textContent = "Install";
     btn.onclick = () => startInstall(g);
-    vline.innerHTML = `Latest <b>v${escapeHtml(g.latest)}</b>`;
+    vline.innerHTML = `Latest <b>v${escapeHtml(target)}</b>`;
+  }
+
+  // A newer build exists but this tier's release window hasn't opened yet.
+  if (pending && !busy && locked.classList.contains("hidden")) {
+    const a = state.account;
+    locked.innerHTML = `<b>v${escapeHtml(pending.version)}</b> is out now for ${escapeHtml(dayOneName())}. On <b>${escapeHtml(a.tierName || "your tier")}</b> (${dayLabel(a.delayDays || 0)}) it unlocks for you on <b>${escapeHtml(fmtDateTime(pending.at))}</b>${upgradeUrl() ? " — or upgrade to play it today. <a data-act=\"refresh\">Just upgraded? Re-check</a>" : "."} ${upgradeButton()}`;
+    locked.classList.remove("hidden");
+    locked.classList.add("info");
+    wireNote(locked);
   }
 
   // progress bar — one calm line, no file names
@@ -460,7 +526,7 @@ $("#btn-achievements").onclick = async () => {
 async function recheckTier() {
   try {
     state.account = await bridge.invoke("refresh_account");
-    renderAccount(); renderList(); renderDetail();
+    await accountChanged();
     toast(state.account ? `Tier: ${state.account.tierName || state.account.tier}` : "Signed out");
   } catch (e) { toast(String(e), true); }
 }
@@ -492,7 +558,7 @@ async function runInstall(g, installDir) {
   state.progress[g.id] = { phase: "planning", bytesDone: 0, bytesTotal: 0, filesDone: 0, filesTotal: 0 };
   renderAction();
   try {
-    state.status[g.id] = await bridge.invoke("install_or_update", { gameId: g.id, version: g.latest, title: g.title, installDir });
+    state.status[g.id] = await bridge.invoke("install_or_update", { gameId: g.id, version: targetVersion(g), title: g.title, installDir });
     toast(`${g.title} is ready to play`);
   } catch (e) {
     toast(String(e), true);
@@ -512,7 +578,7 @@ async function openInstallDialog(g) {
   openModal("#modal-install");
   // Size comes from the manifest (needs sign-in); best effort.
   try {
-    const m = await bridge.invoke("get_download_size", { gameId: g.id, version: g.latest });
+    const m = await bridge.invoke("get_download_size", { gameId: g.id, version: targetVersion(g) });
     installDlg.size = m;
     renderInstallDialog({ installDir: installDlg.dir, freeBytes: installDlg.free });
   } catch { $("#install-size").textContent = "—"; }
@@ -634,7 +700,7 @@ document.querySelectorAll("#modal-login .provider").forEach((b) => {
       state.account = await bridge.invoke("login", { provider });
       closeModals();
       toast(`Signed in as ${state.account.displayName}`);
-      renderAccount(); renderList(); renderDetail();
+      await accountChanged();
     } catch (e) {
       $("#login-status").textContent = String(e);
     } finally {
@@ -655,7 +721,7 @@ async function redeemCode() {
     closeModals();
     $("#input-code").value = "";
     toast(`Signed in as ${state.account.displayName}`);
-    renderAccount(); renderList(); renderDetail();
+    await accountChanged();
   } catch (e) {
     $("#login-status").textContent = String(e);
   } finally { $("#btn-code").disabled = false; }
@@ -698,8 +764,8 @@ function makeMockBridge() {
         case "get_account": return account;
         case "refresh_account": return account;
         case "logout": account = null; return;
-        case "login": await sleep(800); account = { provider: args.provider, displayName: "Preview Patron", tier: 2, tierName: "Phantom" }; return account;
-        case "login_with_code": await sleep(500); if (!/^TEST/i.test(args.code)) throw "That code isn't valid."; account = { provider: "code", displayName: "Tester", tier: 2, tierName: "Supporter (code)" }; return account;
+        case "login": await sleep(800); account = { provider: args.provider, displayName: "Preview Patron", tier: 1, tierName: "Supporter", delayDays: 7 }; return account;
+        case "login_with_code": await sleep(500); if (!/^TEST/i.test(args.code)) throw "That code isn't valid."; account = { provider: "code", displayName: "Tester", tier: 3, tierName: "Day One (code)", delayDays: 0 }; return account;
         case "get_catalog": { if (location.hash === "#bundled") { return { catalog: await (await fetch("/__bundled-catalog/")).json(), offline: true, bundled: true }; } const r = await fetch(`${serverUrl}/catalog.json`); if (!r.ok) throw new Error(`HTTP ${r.status}`); return { catalog: await r.json(), offline: location.hash === "#offline" }; }
         case "get_install_status": { const i = installed[args.gameId]; return { gameId: args.gameId, installed: !!i, installedVersion: i || null, latestVersion: args.latest, updateAvailable: !!i && i !== args.latest, installDir: "C:\\Users\\you\\Games\\White Phantom Games\\" + (args.title || args.gameId), busy: false }; }
         case "get_install_defaults": return { installDir: "C:\\Users\\you\\Games\\White Phantom Games\\" + args.title, installRoot: "C:\\Users\\you\\Games\\White Phantom Games", freeBytes: 412 * 1024 ** 3 };

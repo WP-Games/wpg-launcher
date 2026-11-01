@@ -1,16 +1,25 @@
 {
-  "_comment": "Copy to tools/tiers.json (git-ignored). Levels are launcher access levels; games in catalog.json set requiredTier to one of them.",
+  "_comment": "Copy to tools/tiers.json (git-ignored). `levels` are the launcher's access levels; every Patreon tier, SubscribeStar price and code maps to one. delayDays = how long after a version's Day-1 release that level can download it. Games in catalog.json set requiredTier to the lowest level that may ever download them.",
+  "levels": {
+    "0": { "name": "No game access" },
+    "1": { "name": "Supporter", "delayDays": 7 },
+    "2": { "name": "Early Access", "delayDays": 3 },
+    "3": { "name": "Day One", "delayDays": 0 },
+    "4": { "name": "Creator", "delayDays": 0 }
+  },
   "patreon": {
     "campaignId": "1234567",
     "campaignName": "Your campaign",
     "tiers": {
       "11111111": { "level": 0, "name": "Free", "amountCents": 0 },
-      "22222222": { "level": 1, "name": "Follower", "amountCents": 100 },
-      "33333333": { "level": 2, "name": "Supporter", "amountCents": 500 }
+      "22222222": { "level": 0, "name": "Follower", "amountCents": 100 },
+      "33333333": { "level": 1, "name": "Supporter", "amountCents": 500 },
+      "44444444": { "level": 3, "name": "Premium Supporter", "amountCents": 1000 },
+      "55555555": { "level": 3, "name": "Old grandfathered tier", "amountCents": 500, "legacy": true }
     },
     "byAmountCents": [
-      { "minCents": 100, "level": 1, "name": "Follower" },
-      { "minCents": 500, "level": 2, "name": "Supporter" }
+      { "minCents": 500, "level": 1, "name": "Supporter" },
+      { "minCents": 1000, "level": 3, "name": "Premium Supporter" }
     ],
     "overrides": {
       "<patreon user id>": { "level": 4, "name": "Creator" }
@@ -18,12 +27,12 @@
   },
   "subscribestar": {
     "byPriceCents": [
-      { "minCents": 100, "level": 1, "name": "Follower" },
-      { "minCents": 500, "level": 2, "name": "Supporter" }
+      { "minCents": 500, "level": 1, "name": "Supporter" },
+      { "minCents": 1000, "level": 3, "name": "Premium Supporter" }
     ],
     "overrides": {}
   },
   "codes": {
-    "WPG-EXAMPLE-ONLY-0000": { "name": "Example tester", "level": 2, "created": "2026-01-01" }
+    "WPG-EXAMPLE-ONLY-0000": { "name": "Example tester", "level": 3, "created": "2026-01-01" }
   }
 }

@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import * as patreon from "./patreon.mjs";
 import { resolveCode } from "./codes-lib.mjs";
+import { withAccess, versionAccess, delayDaysFor } from "./access-lib.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -41,10 +42,10 @@ const PORT = Number(process.env.PORT || 8787);
 // requiredTier. Give them whatever names match your Patreon tiers.
 const TIERS = [
   { tier: 0, tierName: "Free" },
-  { tier: 1, tierName: "Just Following (£1)" },
-  { tier: 2, tierName: "Supporter (£5)" },
-  { tier: 3, tierName: "Premium Supporter (£10)" },
-  { tier: 4, tierName: "Ultimate Supporter (£25)" },
+  { tier: 1, tierName: "Supporter (Day 8)" },
+  { tier: 2, tierName: "Law Student (Day 4)" },
+  { tier: 3, tierName: "Day One" },
+  { tier: 4, tierName: "Creator" },
 ];
 const sessions = new Map();
 // Pending real-OAuth logins: our nonce -> { redirect, state } from the launcher
@@ -93,7 +94,7 @@ async function readJson(p) {
 async function catalog() {
   const prod = (await readJson(path.join(CDN, "catalog.json"))) || { games: [] };
   const sample = (await readJson(path.join(SAMPLE, "catalog.json"))) || { games: [] };
-  return { ...prod, games: [...prod.games, ...sample.games] };
+  return { ...sample, ...prod, games: [...prod.games, ...sample.games] };
 }
 /** First existing path among CDN and SAMPLE for a relative key. */
 async function locate(rel) {
@@ -133,7 +134,7 @@ const server = http.createServer(async (req, res) => {
         const tok = await patreon.exchangeCode({ code: url.searchParams.get("code"), clientId: PATREON_CLIENT_ID, clientSecret: PATREON_CLIENT_SECRET, redirectUri: patreonRedirect });
         const identity = await patreon.fetchIdentity(tok.access_token);
         if (process.env.PATREON_DEBUG) console.log(JSON.stringify(identity, null, 2));
-        const acc = patreon.resolveTier(identity, TIERS_CONFIG);
+        const acc = withAccess(patreon.resolveTier(identity, TIERS_CONFIG), TIERS_CONFIG);
         const token = randomBytes(24).toString("hex");
         sessions.set(token, acc);
         log(`(real Patreon: ${acc.displayName}, ${acc.tierName} = level ${acc.tier}, status ${acc.patronStatus}, patreon user id ${acc.userId})`);
@@ -178,7 +179,7 @@ const server = http.createServer(async (req, res) => {
       const tierN = Number(url.searchParams.get("tier") || 0);
       const t = TIERS.find((x) => x.tier === tierN) || TIERS[0];
       const token = randomBytes(24).toString("hex");
-      sessions.set(token, { provider, displayName: url.searchParams.get("name") || "Test Patron", avatar: "", tier: t.tier, tierName: t.tierName });
+      sessions.set(token, withAccess({ provider, displayName: url.searchParams.get("name") || "Test Patron", avatar: "", tier: t.tier, tierName: t.tierName }, TIERS_CONFIG));
       log(`(allowed as ${t.tierName})`);
       return send(res, 302, "", "text/plain", { Location: `${redirect}?token=${token}&state=${state}` });
     }
@@ -186,7 +187,7 @@ const server = http.createServer(async (req, res) => {
     if (p === "/auth/code" && req.method === "POST") {
       let raw = ""; for await (const c of req) raw += c;
       let body = {}; try { body = JSON.parse(raw); } catch {}
-      const acc = resolveCode(body.code, TIERS_CONFIG) || (body.code && /^TEST/i.test(body.code) ? { provider: "code", userId: "code:test", displayName: "Tester", avatar: "", tier: 2, tierName: "Supporter (code)", patronStatus: "code" } : null);
+      const acc = withAccess(resolveCode(body.code, TIERS_CONFIG) || (body.code && /^TEST/i.test(body.code) ? { provider: "code", userId: "code:test", displayName: "Tester", avatar: "", tier: 3, tierName: "Day One (code)", patronStatus: "code" } : null), TIERS_CONFIG);
       log(acc ? `(code → ${acc.displayName})` : "(bad code)");
       if (!acc) return send(res, 401, JSON.stringify({ error: "That code isn't valid." }), "application/json");
       const token = randomBytes(24).toString("hex");
@@ -224,6 +225,12 @@ const server = http.createServer(async (req, res) => {
           const acc = sessions.get(bearer(req));
           if (!acc) { log("401"); return send(res, 401, "sign in required"); }
           if (acc.tier < required) { log(`403 (tier ${acc.tier} < ${required})`); return send(res, 403, "tier too low"); }
+        }
+        const vm = rest.match(/^versions\/([^/]+)\/manifest\.json$/);
+        if (vm && game) {
+          const acc = sessions.get(bearer(req));
+          const access = versionAccess(game, vm[1], acc?.tier || 0, delayDaysFor(TIERS_CONFIG, acc?.tier || 0));
+          if (!access.ok && access.reason === "window") { log(`403 (window opens ${new Date(access.availableAt).toISOString()})`); return send(res, 403, "not yet available for your tier", "text/plain", { "X-Available-At": new Date(access.availableAt).toISOString() }); }
         }
       }
       if (rest.startsWith("versions/")) log();

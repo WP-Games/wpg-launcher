@@ -14,6 +14,10 @@ pub struct Catalog {
     /// website feed when missing.
     #[serde(default = "default_news_feed")]
     pub news_feed: String,
+    /// Where "Upgrade" buttons send players, per provider, plus the name of
+    /// the cheapest Day-1 tier for the "out now for …" wording. Optional.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub support: Option<serde_json::Value>,
 }
 
 pub fn default_news_feed() -> String {
@@ -89,6 +93,9 @@ pub struct VersionInfo {
     pub version: String,
     #[serde(default)]
     pub date: String,
+    /// ISO date-time Day-1 tiers get this version; other tiers add their `delayDays`.
+    #[serde(default)]
+    pub released_at: String,
     #[serde(default)]
     pub notes: String,
 }
@@ -177,6 +184,9 @@ pub struct Account {
     pub tier_name: String,
     #[serde(default)]
     pub patron_status: String,
+    /// Release-window delay for this tier (days after a version's Day-1 release).
+    #[serde(default)]
+    pub delay_days: u32,
     /// The server may hand back a refreshed launcher token with /auth/me.
     /// Stored by the backend, never sent to the UI.
     #[serde(default, skip_serializing_if = "Option::is_none")]

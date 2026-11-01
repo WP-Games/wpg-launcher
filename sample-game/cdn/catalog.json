@@ -1,31 +1,38 @@
 {
+  "support": {
+    "patreon": "https://www.patreon.com/whitephantomgames/membership",
+    "subscribestar": "https://subscribestar.art/white-phantom-games",
+    "dayOneTierName": "Premium Supporter (\u00a310)"
+  },
   "games": [
     {
       "id": "midnight-manor",
       "title": "Midnight Manor",
-      "tagline": "A gothic visual novel — sample game for testing the launcher.",
+      "tagline": "A gothic visual novel \u2014 sample game for testing the launcher.",
       "description": "Replace this with your real game's description. Everything in this panel comes from cdn/catalog.json, so you can edit titles, text and artwork without touching the launcher code.\n\nThe cover and hero images are cdn/games/midnight-manor/cover.png and hero.jpg.",
       "cover": "games/midnight-manor/cover.png",
       "hero": "games/midnight-manor/hero.jpg",
-      "requiredTier": 2,
+      "requiredTier": 1,
       "requiredTierName": "Supporter",
       "latest": "0.1.1",
       "versions": [
         {
           "version": "0.1.1",
           "date": "2026-11-01",
-          "notes": "Added a new scene in the hallway. Removed an unused background."
+          "notes": "Added a new scene in the hallway. Removed an unused background.",
+          "releasedAt": "2026-10-31T18:00:00.000Z"
         },
         {
           "version": "0.1.0",
           "date": "2026-11-01",
-          "notes": "First playable build. Explore the ground floor of the manor."
+          "notes": "First playable build. Explore the ground floor of the manor.",
+          "releasedAt": "2026-09-01T18:00:00.000Z"
         }
       ],
       "news": [
         {
           "title": "Version 0.1.1 released",
-          "text": "A new scene in the hallway and a tidier hall background. [Full changelog](https://www.whitephantomgames.co.uk/news/) · [Report a bug](https://www.whitephantomgames.co.uk/bugs)",
+          "text": "A new scene in the hallway and a tidier hall background. [Full changelog](https://www.whitephantomgames.co.uk/news/) \u00b7 [Report a bug](https://www.whitephantomgames.co.uk/bugs)",
           "date": "2026-11-01"
         },
         {
@@ -40,7 +47,7 @@
     {
       "id": "second-game",
       "title": "Your Second Game",
-      "tagline": "Coming soon — placeholder entry.",
+      "tagline": "Coming soon \u2014 placeholder entry.",
       "description": "A second game is just another entry in catalog.json. Set comingSoon to false and publish a build when it's ready.",
       "cover": "games/second-game/cover.png",
       "hero": "games/second-game/hero.jpg",

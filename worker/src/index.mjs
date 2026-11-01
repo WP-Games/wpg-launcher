@@ -8,7 +8,8 @@
  *   GET /games/<id>/cover.png | hero.jpg            public (anything not under versions/ or objects/)
  *   GET /auth/<provider>/start?redirect_uri&state   → provider login → /auth/<provider>/callback → launcher
  *   GET /auth/me                 Bearer <token>     → account (re-checked live with the provider) + fresh token
- *   GET /games/<id>/versions/<v>/manifest.json      Bearer → 401 anon / 403 tier too low
+ *   GET /games/<id>/versions/<v>/manifest.json      Bearer → 401 anon / 403 tier too low or
+ *                                                   not yet in this tier's release window (X-Available-At)
  *   GET /games/<id>/objects/<sha256>                Bearer → file bytes (Range supported)
  *
  * Files come from the R2 bucket bound as CDN (uploaded by tools/sync-r2.mjs).
@@ -18,19 +19,20 @@ import * as patreon from "../../tools/patreon.mjs";
 import * as substar from "../../tools/subscribestar.mjs";
 import tiers from "../../tools/tiers.json";
 import { resolveCode } from "../../tools/codes-lib.mjs";
+import { withAccess, versionAccess, delayDaysFor } from "../../tools/access-lib.mjs";
 import { seal, open, randomHex } from "./crypto.mjs";
 
 const PROVIDERS = {
   patreon: {
     authorizeUrl: (env, redirectUri, state) => patreon.authorizeUrl({ clientId: env.PATREON_CLIENT_ID, redirectUri, state }),
     exchange: (env, code, redirectUri) => patreon.exchangeCode({ code, clientId: env.PATREON_CLIENT_ID, clientSecret: env.PATREON_CLIENT_SECRET, redirectUri }),
-    lookup: async (accessToken) => patreon.resolveTier(await patreon.fetchIdentity(accessToken), tiers),
+    lookup: async (accessToken) => withAccess(patreon.resolveTier(await patreon.fetchIdentity(accessToken), tiers), tiers),
     configured: (env) => !!(env.PATREON_CLIENT_ID && env.PATREON_CLIENT_SECRET),
   },
   subscribestar: {
     authorizeUrl: (env, redirectUri, state) => substar.authorizeUrl({ clientId: env.SUBSCRIBESTAR_CLIENT_ID, redirectUri, state }),
     exchange: (env, code, redirectUri) => substar.exchangeCode({ code, clientId: env.SUBSCRIBESTAR_CLIENT_ID, clientSecret: env.SUBSCRIBESTAR_CLIENT_SECRET, redirectUri }),
-    lookup: async (accessToken) => substar.resolveTier(await substar.fetchSubscriber(accessToken, substar.HOST, (line) => console.log(line)), tiers),
+    lookup: async (accessToken) => withAccess(substar.resolveTier(await substar.fetchSubscriber(accessToken, substar.HOST, (line) => console.log(line)), tiers), tiers),
     configured: (env) => !!(env.SUBSCRIBESTAR_CLIENT_ID && env.SUBSCRIBESTAR_CLIENT_SECRET),
   },
 };
@@ -114,7 +116,7 @@ async function authCallback(provider, url, env) {
 async function authCode(request, env) {
   let body;
   try { body = await request.json(); } catch { return json(400, { error: "bad request" }); }
-  const account = resolveCode(body?.code, tiers);
+  const account = withAccess(resolveCode(body?.code, tiers), tiers);
   if (!account) return json(401, { error: "That code isn't valid." });
   const token = await seal(env.SESSION_SECRET, {
     v: 1,
@@ -156,7 +158,7 @@ async function authMe(request, env) {
   if (!s) return json(401, { error: "not signed in" });
   if (s.provider === "code") {
     // Re-check the code still exists (revocation) and refresh the level.
-    const account = resolveCode(s.code, tiers);
+    const account = withAccess(resolveCode(s.code, tiers), tiers);
     if (!account) return json(401, { error: "code revoked" });
     const token = await seal(env.SESSION_SECRET, { ...s, acc: account, checked: Date.now() });
     return json(200, { ...account, token });
@@ -200,10 +202,22 @@ async function serveGameFile(gameId, rest, request, env, ctx) {
     const game = await gameFromCatalog(env, gameId);
     if (!game) return text(404, "unknown game");
     const required = game.requiredTier || 0;
-    if (required > 0) {
+    const vm = rest.match(/^versions\/([^/]+)\/manifest\.json$/);
+    if (required > 0 || vm) {
       const s = await session(request, env);
       if (!s) return text(401, "sign in required");
-      if ((s.acc?.tier || 0) < required) return text(403, "tier too low");
+      const tier = s.acc?.tier || 0;
+      if (tier < required) return text(403, "tier too low");
+      if (vm) {
+        // Release windows: Day-1 tiers get a new version immediately, others
+        // after their delay (tiers.json "levels"). Objects are only tier-gated —
+        // they're useless without the manifest that names them.
+        // Delay comes from tiers.json at request time (not the token) so edits apply on deploy.
+        const access = versionAccess(game, decodeURIComponent(vm[1]), tier, delayDaysFor(tiers, tier));
+        if (!access.ok && access.reason === "window") {
+          return new Response("not yet available for your tier", { status: 403, headers: { "content-type": "text/plain; charset=utf-8", "x-available-at": new Date(access.availableAt).toISOString() } });
+        }
+      }
     }
     // Objects are content-addressed → immutable; manifests change per version → short cache.
     const cache = rest.startsWith("objects/") ? "private, max-age=31536000, immutable" : "private, max-age=60";
