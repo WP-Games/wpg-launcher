@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>White Phantom Games</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="logo.png" alt="" class="brand-logo" />
+        <span class="brand-name">White Phantom <span>Games</span></span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div id="account-area" class="account">
+        <!-- filled by JS -->
+      </div>
+      <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </header>
+
+    <!-- Launcher self-update banner -->
+    <div id="update-banner" class="update-banner hidden">
+      <span id="update-text">A new version of the launcher is available.</span>
+      <button id="btn-update-launcher" class="btn-primary small">Restart to update</button>
+      <button id="btn-update-later" class="btn-text small">Later</button>
+    </div>
+
+    <!-- Main split -->
+    <main class="main">
+      <aside class="sidebar">
+        <div class="sidebar-title">Library</div>
+        <nav id="game-list" class="game-list" aria-label="Games"></nav>
+        <div class="sidebar-footer">
+          <a href="#" id="link-patreon" class="support-link">
+            <span class="dot patreon"></span> Patreon
+          </a>
+          <a href="#" id="link-substar" class="support-link">
+            <span class="dot substar"></span> SubscribeStar
+          </a>
+        </div>
+      </aside>
+
+      <section id="detail" class="detail">
+        <div class="detail-empty" id="detail-empty">
+          <p>Connecting to server…</p>
+        </div>
+        <div id="detail-content" class="detail-content hidden">
+          <div class="hero" id="hero">
+            <div class="hero-shade"></div>
+            <div class="hero-text">
+              <h1 id="game-title"></h1>
+              <p id="game-tagline" class="tagline"></p>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button id="btn-primary" class="btn-primary"></button>
+            <div class="action-meta">
+              <div id="version-line" class="version-line"></div>
+              <div id="progress-wrap" class="progress-wrap hidden">
+                <div class="progress"><div id="progress-bar" class="progress-bar"></div></div>
+                <div id="progress-text" class="progress-text"></div>
+              </div>
+            </div>
+            <div class="action-more">
+              <button id="btn-achievements" class="trophy hidden" title="Achievements">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a2 2 0 0 1-2 4h-1M7 6H4a2 2 0 0 0 2 4h1"/></svg>
+                <span id="trophy-count">0 / 0</span>
+              </button>
+              <button id="btn-more" class="icon-btn" title="More" aria-label="More options">⋯</button>
+              <div id="more-menu" class="menu hidden">
+                <button data-act="folder">Open install folder</button>
+                <button data-act="verify">Verify files</button>
+                <button data-act="uninstall" class="danger">Uninstall</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="locked-note" class="locked-note hidden"></div>
+
+          <div class="detail-grid">
+            <div class="col">
+              <div class="card" id="card-game-news">
+                <h2>Game news</h2>
+                <div id="game-news" class="game-news"></div>
+              </div>
+              <div class="card">
+                <h2>About</h2>
+                <p id="game-desc"></p>
+                <details class="history" id="history-wrap">
+                  <summary>Version history</summary>
+                  <div id="changelog" class="changelog"></div>
+                </details>
+              </div>
+            </div>
+            <div class="col">
+              <div class="card card-feed">
+                <h2>What's new <span class="muted-tag">whitephantomgames.co.uk</span></h2>
+                <div id="feed" class="feed"><p class="muted">Loading news…</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Login chooser -->
+    <div id="modal-login" class="modal hidden">
+      <div class="modal-box">
+        <h2>Sign in</h2>
+        <p class="muted">Choose where you support White Phantom Games. You'll sign in on their site — we never see your password.</p>
+        <div class="provider-buttons">
+          <button class="provider patreon" data-provider="patreon">Continue with Patreon</button>
+          <button class="provider substar" data-provider="subscribestar">Continue with SubscribeStar</button>
+        </div>
+        <div class="code-row">
+          <a id="link-have-code" class="muted small code-link">Have a code?</a>
+          <div id="code-form" class="code-form hidden">
+            <input id="input-code" type="text" placeholder="WPG-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" />
+            <button id="btn-code" class="btn-ghost small">Continue</button>
+          </div>
+        </div>
+        <p id="login-status" class="muted small"></p>
+        <button class="btn-ghost" data-close>Cancel</button>
+      </div>
+    </div>
+
+    <!-- Install location -->
+    <div id="modal-install" class="modal hidden">
+      <div class="modal-box wide">
+        <h2>Install <span id="install-title"></span></h2>
+        <p class="muted">Choose where to install. The game gets its own folder inside the location you pick.</p>
+        <div class="field">
+          <span>Install location</span>
+          <div class="path-row">
+            <code id="install-path" class="path"></code>
+            <button id="btn-browse" class="btn-ghost small">Browse…</button>
+          </div>
+        </div>
+        <div class="install-facts">
+          <div><span class="muted">Download size</span><b id="install-size">—</b></div>
+          <div><span class="muted">Free space</span><b id="install-free">—</b></div>
+        </div>
+        <p id="install-warning" class="warn small hidden"></p>
+        <div class="modal-actions">
+          <button class="btn-ghost" data-close>Cancel</button>
+          <button id="btn-install-confirm" class="btn-primary small">Install</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Uninstall confirm -->
+    <div id="modal-uninstall" class="modal hidden">
+      <div class="modal-box">
+        <h2>Uninstall <span id="uninstall-title"></span>?</h2>
+        <p class="muted">This removes the game files from:</p>
+        <code id="uninstall-path" class="path" style="margin-bottom:14px"></code>
+        <p class="muted">Your saves are kept (Ren'Py stores them separately) and you can reinstall any time.</p>
+        <div class="modal-actions">
+          <button class="btn-ghost" data-close>Cancel</button>
+          <button id="btn-uninstall-confirm" class="btn-danger small">Uninstall</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div id="modal-ach" class="modal hidden">
+      <div class="modal-box ach-box">
+        <div class="ach-head">
+          <div>
+            <h2>Achievements</h2>
+            <p id="ach-summary" class="muted"></p>
+          </div>
+          <button class="icon-btn" data-close aria-label="Close">✕</button>
+        </div>
+        <div class="progress ach-progress"><div id="ach-bar" class="progress-bar"></div></div>
+        <div id="ach-list" class="ach-list"></div>
+        <p id="ach-note" class="muted small"></p>
+      </div>
+    </div>
+
+    <!-- Right-click menu -->
+    <div id="ctx-menu" class="menu ctx hidden">
+      <button data-act="play">Play</button>
+      <button data-act="install">Install</button>
+      <button data-act="update">Update</button>
+      <div class="menu-sep"></div>
+      <button data-act="folder">Open install location</button>
+      <button data-act="verify">Verify files</button>
+      <div class="menu-sep"></div>
+      <button data-act="uninstall" class="danger">Uninstall</button>
+    </div>
+
+    <!-- Settings -->
+    <div id="modal-settings" class="modal hidden">
+      <div class="modal-box">
+        <h2>Settings</h2>
+        <label class="field">
+          <span>Content server</span>
+          <input id="input-server" type="text" spellcheck="false" />
+          <small class="muted">Normally <code>https://api.whitephantomgames.co.uk</code>. Developers: <code>http://127.0.0.1:8787</code> for the local test server.</small>
+        </label>
+        <div class="modal-actions">
+          <button class="btn-ghost" data-close>Cancel</button>
+          <button id="btn-save-settings" class="btn-primary small">Save</button>
+        </div>
+        <p class="muted small" id="about-line"></p>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

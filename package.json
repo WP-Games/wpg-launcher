@@ -1,0 +1,31 @@
+{
+  "name": "wpg-launcher",
+  "version": "0.1.0",
+  "private": true,
+  "description": "White Phantom Games launcher \u2014 Tauri desktop app + publish tooling",
+  "type": "module",
+  "scripts": {
+    "serve": "node tools/serve.mjs",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "publish": "node tools/publish.mjs",
+    "demo:v1": "node tools/publish.mjs midnight-manor 0.1.0 sample-game/v0.1.0 --exe MidnightManor.bat --cdn sample-game/cdn --notes \"First playable build. Explore the ground floor of the manor.\"",
+    "demo:v2": "node tools/publish.mjs midnight-manor 0.1.1 sample-game/v0.1.1 --exe MidnightManor.bat --cdn sample-game/cdn --notes \"Added a new scene in the hallway. Removed an unused background.\"",
+    "test": "node --test tools/*.test.mjs",
+    "patreon:tiers": "node tools/patreon-tiers.mjs",
+    "sync": "node tools/sync-r2.mjs",
+    "worker:dev": "npm --prefix worker run dev",
+    "worker:deploy": "npm --prefix worker run deploy",
+    "worker:tail": "npm --prefix worker run tail",
+    "predev": "node tools/bundle-offline.mjs",
+    "prebuild": "node tools/bundle-offline.mjs",
+    "bundle": "node tools/bundle-offline.mjs",
+    "keygen": "node tools/keygen.mjs",
+    "tauri": "tauri",
+    "release": "node tools/release-launcher.mjs",
+    "code": "node tools/codes.mjs"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

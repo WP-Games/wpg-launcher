@@ -1,0 +1,30 @@
+# --- secrets & per-machine config (never commit) ---
+# tiers.json holds the tier mapping, tester overrides and ACCESS CODES.
+# Copy tools/tiers.example.json to tools/tiers.json locally.
+.env
+.env.*
+.env - *
+!.env.example
+worker/.dev.vars
+/tools/tiers.json
+
+# --- game content / published files (lives in R2, not in git) ---
+/cdn/
+
+# --- generated ---
+node_modules/
+/worker/.wrangler/
+/src-tauri/target/
+/src-tauri/gen/
+/src/bundled/
+/src-tauri/bundled/
+*.part
+/sample-game/cdn/games/*/objects/
+/sample-game/cdn/games/*/versions/
+/sample-game/cdn/**/*.sig
+
+# --- OS / editor noise ---
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/

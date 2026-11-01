@@ -1,0 +1,29 @@
+{
+  "_comment": "Copy to tools/tiers.json (git-ignored). Levels are launcher access levels; games in catalog.json set requiredTier to one of them.",
+  "patreon": {
+    "campaignId": "1234567",
+    "campaignName": "Your campaign",
+    "tiers": {
+      "11111111": { "level": 0, "name": "Free", "amountCents": 0 },
+      "22222222": { "level": 1, "name": "Follower", "amountCents": 100 },
+      "33333333": { "level": 2, "name": "Supporter", "amountCents": 500 }
+    },
+    "byAmountCents": [
+      { "minCents": 100, "level": 1, "name": "Follower" },
+      { "minCents": 500, "level": 2, "name": "Supporter" }
+    ],
+    "overrides": {
+      "<patreon user id>": { "level": 4, "name": "Creator" }
+    }
+  },
+  "subscribestar": {
+    "byPriceCents": [
+      { "minCents": 100, "level": 1, "name": "Follower" },
+      { "minCents": 500, "level": 2, "name": "Supporter" }
+    ],
+    "overrides": {}
+  },
+  "codes": {
+    "WPG-EXAMPLE-ONLY-0000": { "name": "Example tester", "level": 2, "created": "2026-01-01" }
+  }
+}

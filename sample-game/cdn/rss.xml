@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>White Phantom Games (local sample feed)</title>
+    <link>https://whitephantomgames.co.uk/</link>
+    <description>Sample feed served by tools/serve.mjs for offline testing. The real one is https://whitephantomgames.co.uk/rss.xml</description>
+    <language>en-gb</language>
+    <item>
+      <title>Launcher preview build</title>
+      <link>https://whitephantomgames.co.uk/news/</link>
+      <guid>https://whitephantomgames.co.uk/news/launcher-preview/</guid>
+      <description>&lt;p&gt;We're testing a new launcher that keeps your game up to date automatically — no more Mega links.&lt;/p&gt;</description>
+      <pubDate>Sat, 01 Nov 2026 09:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>October development update</title>
+      <link>https://whitephantomgames.co.uk/news/</link>
+      <guid>https://whitephantomgames.co.uk/news/october-update/</guid>
+      <description>Progress on the next chapter, new character art, and what's coming in November.</description>
+      <pubDate>Mon, 27 Oct 2026 18:30:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Story idea survey results</title>
+      <link>https://whitephantomgames.co.uk/news/</link>
+      <guid>https://whitephantomgames.co.uk/news/survey-results/</guid>
+      <description>Thanks to everyone who voted — here's what you picked and how it shapes the roadmap.</description>
+      <pubDate>Wed, 15 Oct 2026 12:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

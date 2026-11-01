@@ -1,0 +1,55 @@
+{
+  "games": [
+    {
+      "id": "midnight-manor",
+      "title": "Midnight Manor",
+      "tagline": "A gothic visual novel — sample game for testing the launcher.",
+      "description": "Replace this with your real game's description. Everything in this panel comes from cdn/catalog.json, so you can edit titles, text and artwork without touching the launcher code.\n\nThe cover and hero images are cdn/games/midnight-manor/cover.png and hero.jpg.",
+      "cover": "games/midnight-manor/cover.png",
+      "hero": "games/midnight-manor/hero.jpg",
+      "requiredTier": 2,
+      "requiredTierName": "Supporter",
+      "latest": "0.1.1",
+      "versions": [
+        {
+          "version": "0.1.1",
+          "date": "2026-11-01",
+          "notes": "Added a new scene in the hallway. Removed an unused background."
+        },
+        {
+          "version": "0.1.0",
+          "date": "2026-11-01",
+          "notes": "First playable build. Explore the ground floor of the manor."
+        }
+      ],
+      "news": [
+        {
+          "title": "Version 0.1.1 released",
+          "text": "A new scene in the hallway and a tidier hall background. [Full changelog](https://www.whitephantomgames.co.uk/news/) · [Report a bug](https://www.whitephantomgames.co.uk/bugs)",
+          "date": "2026-11-01"
+        },
+        {
+          "title": "Poll: which room next?",
+          "text": "Supporters can vote on the next area to explore. [Vote on Patreon](https://www.patreon.com/whitephantomgames)",
+          "date": "2026-10-28"
+        }
+      ],
+      "achievements": "games/midnight-manor/achievements.json",
+      "saveDirectory": "MidnightManor"
+    },
+    {
+      "id": "second-game",
+      "title": "Your Second Game",
+      "tagline": "Coming soon — placeholder entry.",
+      "description": "A second game is just another entry in catalog.json. Set comingSoon to false and publish a build when it's ready.",
+      "cover": "games/second-game/cover.png",
+      "hero": "games/second-game/hero.jpg",
+      "requiredTier": 3,
+      "requiredTierName": "Premium Supporter",
+      "latest": "0.0.0",
+      "versions": [],
+      "comingSoon": true,
+      "news": []
+    }
+  ]
+}
