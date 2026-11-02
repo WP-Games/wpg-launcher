@@ -11,6 +11,8 @@ worker/.dev.vars
 
 # --- game content / published files (lives in R2, not in git) ---
 /cdn/
+# Mac launcher builds copied over from the Mac for tools/release-launcher.mjs
+/incoming/
 
 # --- generated ---
 node_modules/

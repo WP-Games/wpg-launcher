@@ -466,7 +466,31 @@ pub async fn apply_plan(
             let _ = tokio::fs::remove_file(install_dir.join(rel)).await;
         }
     }
+
+    // macOS/Linux: files we wrote come out 0644, but the game binary, the
+    // Ren'Py launcher script and everything in the platform's lib/ folder
+    // must be executable or the game won't start. (Windows has no such bit.)
+    #[cfg(unix)]
+    mark_executables(manifest, install_dir);
     Ok(())
+}
+
+#[cfg(unix)]
+fn mark_executables(manifest: &Manifest, install_dir: &Path) {
+    use std::os::unix::fs::PermissionsExt;
+    let plat = Manifest::current_platform();
+    for f in &manifest.files {
+        let wants = f.path == manifest.exe
+            || f.path.ends_with(".sh")
+            || f.path.contains("/Contents/MacOS/")
+            || (f.platform == plat && f.path.starts_with("lib/"));
+        if !wants {
+            continue;
+        }
+        if let Ok(rel) = safe_relative(&f.path) {
+            let _ = std::fs::set_permissions(install_dir.join(rel), std::fs::Permissions::from_mode(0o755));
+        }
+    }
 }
 
 /// Rebuild `dest` from chunks: reused pieces are copied out of the existing

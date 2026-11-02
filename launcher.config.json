@@ -14,6 +14,7 @@
     "identifier": "uk.co.whitephantomgames.launcher",
     "installFolder": "White Phantom Games",
     "codePrefix": "WPG",
+    "installerName": "wpg-launcher",
     "keyDir": ".wpg",
     "logo": "logo.png"
   },

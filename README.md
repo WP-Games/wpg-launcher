@@ -434,7 +434,66 @@ npm run sync
 Running launchers check `/launcher/latest.json` at startup, show a banner,
 and "Restart to update" installs the signed update passively. The website can
 link to `https://api.whitephantomgames.co.uk/launcher/download`, which always
-redirects to the newest installer.
+redirects to the newest installer for the visitor's platform (Mac browsers get
+the `.dmg`; add `?platform=windows` or `?platform=mac` to force one).
+
+### Mac build (universal: Apple Silicon + Intel)
+
+Tauri can't cross-compile for macOS, so the Mac launcher is built on the Mac
+and its three output files are copied to the PC, where the normal release
+steps publish them next to the Windows build. The Windows steps above don't
+change.
+
+**One-time setup on the Mac** (Terminal):
+
+```bash
+xcode-select --install                                   # Apple's compiler tools
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh   # Rust; then open a new Terminal
+rustup target add aarch64-apple-darwin x86_64-apple-darwin
+# Node.js: install the LTS from https://nodejs.org (or `brew install node`)
+git clone https://github.com/WP-Games/wpg-launcher.git && cd wpg-launcher
+npm install
+```
+
+Copy `wpg-launcher.key` from the PC (`%USERPROFILE%\.tauri\`) to the Mac at
+`~/.tauri/wpg-launcher.key` — AirDrop is fine; never put it in the repo or chat.
+The repo's `tauri.conf.json` already carries the matching public key.
+
+**Each release on the Mac**, after the PC has been pushed with the new version
+number (`git pull` first so the Mac builds the same code):
+
+```bash
+cd ~/wpg-launcher && git pull
+export TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/wpg-launcher.key)"
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="<your password>"
+npm run build -- --target universal-apple-darwin --bundles app,dmg
+open src-tauri/target/universal-apple-darwin/release/bundle/
+```
+
+That opens a folder with two subfolders. Copy these three files to the PC into
+`incoming\mac\` in the launcher project (the folder is git-ignored):
+
+- `dmg/White Phantom Games_<version>_universal.dmg` — what players download
+- `macos/White Phantom Games.app.tar.gz` — what the self-updater downloads
+- `macos/White Phantom Games.app.tar.gz.sig` — its signature
+
+Then on the PC run the usual `npm run release -- --notes "…"` and `npm run sync`.
+The release script publishes both platforms and merges them into one
+`latest.json`, so the order (Windows first or Mac first) doesn't matter as long
+as the version number matches.
+
+**Unsigned app, first launch.** There's no Apple developer account, so macOS
+will say the app can't be verified. The player opens the `.dmg`, drags the app
+to Applications, double-clicks it once (macOS refuses), then goes to
+System Settings → Privacy & Security, scrolls down and clicks **Open Anyway**.
+That's a one-off; updates the launcher installs itself are not quarantined.
+Put that sentence on the website download page.
+
+**Testing on your Mac:** the first run shows the 18+ / EULA screen, then sign
+in with Patreon; the game downloads to `~/Games/White Phantom Games/<title>`
+and Play launches the `.app`. If Play says "Couldn't start game: permission
+denied", that's the executable-bit fix in `updater.rs` not having run — tell
+Claude.
 
 ### Cloudflare hardening (one-time, dashboard)
 
