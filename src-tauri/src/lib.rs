@@ -102,6 +102,18 @@ fn accept_terms(state: State<AppState>, version: String) -> Result<(), String> {
     store::save_settings(&state.app_data, &s).map_err(err)
 }
 
+/// Language dropdown (first-run screen and Settings).
+#[tauri::command]
+fn set_language(state: State<AppState>, language: String) -> Result<(), String> {
+    let mut s = state.settings();
+    let code = language.trim().to_ascii_lowercase();
+    if code.is_empty() || code.len() > 10 || !code.chars().all(|ch| ch.is_ascii_alphanumeric() || ch == '-') {
+        return Err("Invalid language code".into());
+    }
+    s.language = Some(code);
+    store::save_settings(&state.app_data, &s).map_err(err)
+}
+
 /// First-run screen: the user declined.
 #[tauri::command]
 fn quit_app(app: AppHandle) {
@@ -672,6 +684,7 @@ pub fn run() {
             get_settings,
             set_server_url,
             accept_terms,
+            set_language,
             quit_app,
             get_account,
             login,

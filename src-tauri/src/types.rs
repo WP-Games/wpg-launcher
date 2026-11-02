@@ -209,6 +209,9 @@ pub struct Settings {
     /// `legal.termsVersion` the user accepted on the first-run screen (None → not yet).
     #[serde(default)]
     pub accepted_terms: Option<String>,
+    /// UI language code from i18n.js ("en", "de", "ja", …). None → English.
+    #[serde(default)]
+    pub language: Option<String>,
 }
 
 impl Default for Settings {
@@ -221,6 +224,7 @@ impl Default for Settings {
             account: None,
             install_root: None,
             accepted_terms: None,
+            language: None,
         }
     }
 }

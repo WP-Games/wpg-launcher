@@ -240,7 +240,11 @@ code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 12px; backg
 .modal-box.wide { width: 560px; }
 .modal.terms { z-index: 60; background: rgba(0,0,0,.8); }
 .modal.terms .modal-box { width: 480px; }
-.terms-logo { height: 40px; margin-bottom: 10px; }
+.terms-logo { height: 40px; }
+.terms-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+select.lang-select { padding: 7px 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); color: var(--text); font: inherit; cursor: pointer; }
+select.lang-select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.field select.lang-select { width: 100%; }
 .check { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; margin: 16px 0 20px; line-height: 1.45; cursor: pointer; }
 .check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; }
 .check a { color: var(--text); text-decoration: underline; }

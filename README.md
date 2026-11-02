@@ -547,6 +547,25 @@ Self-updates replace the AppImage in place.
 shows the 18+ screen; sign in, install the game to `~/Games/White Phantom
 Games/<title>`, Play runs the game's `.sh`.
 
+### Languages
+
+The launcher UI is in the game's eight languages (en, de, es, pt-br, ru, ja,
+zh-tw, zh-cn). All text lives in `src/i18n.js` — English is the master list;
+a key missing from another language falls back to English. Players pick a
+language on the first-run screen or in Settings; the choice is saved in
+`settings.json` (`language`). Default is English.
+
+To change or add text: add the key to `en` in `src/i18n.js`, then the same key
+in the other seven; in HTML use `data-i18n="key"` (text), `data-i18n-title`
+(tooltip) or `data-i18n-html` (markup); in JS use `t("key", { var })` for text
+or `th(...)` for HTML. Markup inside strings: `**bold**`, `[refresh]…[/refresh]`
+/ `[login]…[/login]` (action links), `[eula]…[/eula]` / `[privacy]…[/privacy]`.
+Dates follow the language automatically. Rust error messages stay English.
+
+The Windows installer shows a language picker (NSIS's own translations;
+`bundle.windows.nsis.languages` in tauri.conf.json). The EULA page in it stays
+English, as does the EULA itself.
+
 ### Cloudflare hardening (one-time, dashboard)
 
 - **Login routes are rate limited inside the Worker** (30 requests / 10 s per IP,

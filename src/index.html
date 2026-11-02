@@ -19,22 +19,22 @@
       <div id="account-area" class="account">
         <!-- filled by JS -->
       </div>
-      <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Settings">
+      <button id="btn-settings" class="icon-btn" data-i18n-title="top.settings">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
       </button>
     </header>
 
     <!-- Launcher self-update banner -->
     <div id="update-banner" class="update-banner hidden">
-      <span id="update-text">A new version of the launcher is available.</span>
-      <button id="btn-update-launcher" class="btn-primary small">Restart to update</button>
-      <button id="btn-update-later" class="btn-text small">Later</button>
+      <span id="update-text" data-i18n="update.available"></span>
+      <button id="btn-update-launcher" class="btn-primary small" data-i18n="update.restart"></button>
+      <button id="btn-update-later" class="btn-text small" data-i18n="update.later"></button>
     </div>
 
     <!-- Main split -->
     <main class="main">
       <aside class="sidebar">
-        <div class="sidebar-title">Library</div>
+        <div class="sidebar-title" data-i18n="sidebar.library"></div>
         <nav id="game-list" class="game-list" aria-label="Games"></nav>
         <div class="sidebar-footer">
           <a href="#" id="link-patreon" class="support-link">
@@ -48,7 +48,7 @@
 
       <section id="detail" class="detail">
         <div class="detail-empty" id="detail-empty">
-          <p>Connecting to server…</p>
+          <p data-i18n="detail.connecting"></p>
         </div>
         <div id="detail-content" class="detail-content hidden">
           <div class="hero" id="hero">
@@ -69,15 +69,15 @@
               </div>
             </div>
             <div class="action-more">
-              <button id="btn-achievements" class="trophy hidden" title="Achievements">
+              <button id="btn-achievements" class="trophy hidden" data-i18n-title="top.achievements">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a2 2 0 0 1-2 4h-1M7 6H4a2 2 0 0 0 2 4h1"/></svg>
                 <span id="trophy-count">0 / 0</span>
               </button>
-              <button id="btn-more" class="icon-btn" title="More" aria-label="More options">⋯</button>
+              <button id="btn-more" class="icon-btn" data-i18n-title="top.more">⋯</button>
               <div id="more-menu" class="menu hidden">
-                <button data-act="folder">Open install folder</button>
-                <button data-act="verify">Verify files</button>
-                <button data-act="uninstall" class="danger">Uninstall</button>
+                <button data-act="folder" data-i18n="menu.openFolder"></button>
+                <button data-act="verify" data-i18n="menu.verify"></button>
+                <button data-act="uninstall" class="danger" data-i18n="common.uninstall"></button>
               </div>
             </div>
           </div>
@@ -87,22 +87,22 @@
           <div class="detail-grid">
             <div class="col">
               <div class="card" id="card-game-news">
-                <h2>Game news</h2>
+                <h2 data-i18n="cards.gameNews"></h2>
                 <div id="game-news" class="game-news"></div>
               </div>
               <div class="card">
-                <h2>About</h2>
+                <h2 data-i18n="cards.about"></h2>
                 <p id="game-desc"></p>
                 <details class="history" id="history-wrap">
-                  <summary>Version history</summary>
+                  <summary data-i18n="cards.history"></summary>
                   <div id="changelog" class="changelog"></div>
                 </details>
               </div>
             </div>
             <div class="col">
               <div class="card card-feed">
-                <h2>What's new <span class="muted-tag" id="feed-domain"></span></h2>
-                <div id="feed" class="feed"><p class="muted">Loading news…</p></div>
+                <h2><span data-i18n="cards.whatsNew"></span> <span class="muted-tag" id="feed-domain"></span></h2>
+                <div id="feed" class="feed"><p class="muted" data-i18n="news.loading"></p></div>
               </div>
             </div>
           </div>
@@ -113,18 +113,19 @@
     <!-- First-run: age + terms acceptance (shown until accepted; no close button) -->
     <div id="modal-terms" class="modal terms hidden" role="dialog" aria-modal="true" aria-labelledby="terms-title">
       <div class="modal-box">
-        <img src="logo.png" alt="" class="terms-logo" />
-        <h2 id="terms-title">Before you start</h2>
-        <p class="muted">Games from <span data-cfg="studio.name"></span> are for adults only. Please confirm the following to use the launcher.</p>
+        <div class="terms-top">
+          <img src="logo.png" alt="" class="terms-logo" />
+          <select class="lang-select" aria-label="Language"></select>
+        </div>
+        <h2 id="terms-title" data-i18n="terms.title"></h2>
+        <p class="muted" data-i18n-html="terms.intro"></p>
         <label class="check">
           <input id="chk-terms" type="checkbox" />
-          <span>I am <strong>18 years of age or over</strong> (or the age of majority where I live, if higher), and I accept the
-            <a href="#" id="link-eula-terms">End User Licence Agreement</a> and the
-            <a href="#" id="link-privacy-terms">Privacy Policy</a>.</span>
+          <span data-i18n-html="terms.check"></span>
         </label>
         <div class="modal-actions">
-          <button id="btn-terms-quit" class="btn-ghost">Quit</button>
-          <button id="btn-terms-accept" class="btn-primary" disabled>Continue</button>
+          <button id="btn-terms-quit" class="btn-ghost" data-i18n="common.quit"></button>
+          <button id="btn-terms-accept" class="btn-primary" disabled data-i18n="common.continue"></button>
         </div>
       </div>
     </div>
@@ -132,44 +133,44 @@
     <!-- Login chooser -->
     <div id="modal-login" class="modal hidden">
       <div class="modal-box">
-        <h2>Sign in</h2>
-        <p class="muted">Choose where you support <span data-cfg="studio.name"></span>. You'll sign in on their site — we never see your password.</p>
+        <h2 data-i18n="login.title"></h2>
+        <p class="muted" data-i18n-html="login.intro"></p>
         <div class="provider-buttons">
-          <button class="provider patreon" data-provider="patreon">Continue with Patreon</button>
-          <button class="provider substar" data-provider="subscribestar">Continue with SubscribeStar</button>
+          <button class="provider patreon" data-provider="patreon" data-i18n="login.patreon"></button>
+          <button class="provider substar" data-provider="subscribestar" data-i18n="login.substar"></button>
         </div>
         <div class="code-row">
-          <a id="link-have-code" class="muted small code-link">Have a code?</a>
+          <a id="link-have-code" class="muted small code-link" data-i18n="login.haveCode"></a>
           <div id="code-form" class="code-form hidden">
             <input id="input-code" type="text" placeholder="XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" />
-            <button id="btn-code" class="btn-ghost small">Continue</button>
+            <button id="btn-code" class="btn-ghost small" data-i18n="common.continue"></button>
           </div>
         </div>
         <p id="login-status" class="muted small"></p>
-        <button class="btn-ghost" data-close>Cancel</button>
+        <button class="btn-ghost" data-close data-i18n="common.cancel"></button>
       </div>
     </div>
 
     <!-- Install location -->
     <div id="modal-install" class="modal hidden">
       <div class="modal-box wide">
-        <h2>Install <span id="install-title"></span></h2>
-        <p class="muted">Choose where to install. The game gets its own folder inside the location you pick.</p>
+        <h2 id="install-heading"></h2>
+        <p class="muted" data-i18n="install.intro"></p>
         <div class="field">
-          <span>Install location</span>
+          <span data-i18n="install.location"></span>
           <div class="path-row">
             <code id="install-path" class="path"></code>
-            <button id="btn-browse" class="btn-ghost small">Browse…</button>
+            <button id="btn-browse" class="btn-ghost small" data-i18n="install.browse"></button>
           </div>
         </div>
         <div class="install-facts">
-          <div><span class="muted">Download size</span><b id="install-size">—</b></div>
-          <div><span class="muted">Free space</span><b id="install-free">—</b></div>
+          <div><span class="muted" data-i18n="install.downloadSize"></span><b id="install-size">—</b></div>
+          <div><span class="muted" data-i18n="install.freeSpace"></span><b id="install-free">—</b></div>
         </div>
         <p id="install-warning" class="warn small hidden"></p>
         <div class="modal-actions">
-          <button class="btn-ghost" data-close>Cancel</button>
-          <button id="btn-install-confirm" class="btn-primary small">Install</button>
+          <button class="btn-ghost" data-close data-i18n="common.cancel"></button>
+          <button id="btn-install-confirm" class="btn-primary small" data-i18n="common.install"></button>
         </div>
       </div>
     </div>
@@ -177,13 +178,13 @@
     <!-- Uninstall confirm -->
     <div id="modal-uninstall" class="modal hidden">
       <div class="modal-box">
-        <h2>Uninstall <span id="uninstall-title"></span>?</h2>
-        <p class="muted">This removes the game files from:</p>
+        <h2 id="uninstall-heading"></h2>
+        <p class="muted" data-i18n="uninstall.intro"></p>
         <code id="uninstall-path" class="path" style="margin-bottom:14px"></code>
-        <p class="muted">Your saves are kept (Ren'Py stores them separately) and you can reinstall any time.</p>
+        <p class="muted" data-i18n="uninstall.saves"></p>
         <div class="modal-actions">
-          <button class="btn-ghost" data-close>Cancel</button>
-          <button id="btn-uninstall-confirm" class="btn-danger small">Uninstall</button>
+          <button class="btn-ghost" data-close data-i18n="common.cancel"></button>
+          <button id="btn-uninstall-confirm" class="btn-danger small" data-i18n="common.uninstall"></button>
         </div>
       </div>
     </div>
@@ -193,10 +194,10 @@
       <div class="modal-box ach-box">
         <div class="ach-head">
           <div>
-            <h2>Achievements</h2>
+            <h2 data-i18n="top.achievements"></h2>
             <p id="ach-summary" class="muted"></p>
           </div>
-          <button class="icon-btn" data-close aria-label="Close">✕</button>
+          <button class="icon-btn" data-close data-i18n-title="common.close">✕</button>
         </div>
         <div class="progress ach-progress"><div id="ach-bar" class="progress-bar"></div></div>
         <div id="ach-list" class="ach-list"></div>
@@ -206,31 +207,35 @@
 
     <!-- Right-click menu -->
     <div id="ctx-menu" class="menu ctx hidden">
-      <button data-act="play">Play</button>
-      <button data-act="install">Install</button>
-      <button data-act="update">Update</button>
+      <button data-act="play" data-i18n="common.play"></button>
+      <button data-act="install" data-i18n="common.install"></button>
+      <button data-act="update" data-i18n="common.update"></button>
       <div class="menu-sep"></div>
-      <button data-act="folder">Open install location</button>
-      <button data-act="verify">Verify files</button>
+      <button data-act="folder" data-i18n="menu.openFolder"></button>
+      <button data-act="verify" data-i18n="menu.verify"></button>
       <div class="menu-sep"></div>
-      <button data-act="uninstall" class="danger">Uninstall</button>
+      <button data-act="uninstall" class="danger" data-i18n="common.uninstall"></button>
     </div>
 
     <!-- Settings -->
     <div id="modal-settings" class="modal hidden">
       <div class="modal-box">
-        <h2>Settings</h2>
+        <h2 data-i18n="settings.title"></h2>
         <label class="field">
-          <span>Content server</span>
+          <span data-i18n="common.language"></span>
+          <select class="lang-select"></select>
+        </label>
+        <label class="field">
+          <span data-i18n="settings.server"></span>
           <input id="input-server" type="text" spellcheck="false" />
-          <small class="muted">Normally <code data-cfg="server.apiUrl"></code>. Developers: <code>http://127.0.0.1:8787</code> for the local test server.</small>
+          <small class="muted" data-i18n-html="settings.serverHint"></small>
         </label>
         <div class="modal-actions">
-          <button class="btn-ghost" data-close>Cancel</button>
-          <button id="btn-save-settings" class="btn-primary small">Save</button>
+          <button class="btn-ghost" data-close data-i18n="common.cancel"></button>
+          <button id="btn-save-settings" class="btn-primary small" data-i18n="common.save"></button>
         </div>
         <p class="muted small" id="about-line"></p>
-        <p class="muted small"><a href="#" id="link-eula">End User Licence Agreement</a> · <a href="#" id="link-privacy">Privacy Policy</a> <span id="terms-accepted-line"></span></p>
+        <p class="muted small"><a href="#" data-legal="eula" data-i18n="legal.eula"></a> · <a href="#" data-legal="privacy" data-i18n="legal.privacy"></a> <span id="terms-accepted-line"></span></p>
       </div>
     </div>
 
@@ -238,6 +243,7 @@
   </div>
 
   <script src="config.js"></script>
+  <script src="i18n.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

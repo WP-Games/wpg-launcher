@@ -27,6 +27,54 @@ function applyBranding() {
   });
 }
 
+// ---------- language ----------
+// Text lives in i18n.js (eight languages). The chosen language is saved in
+// settings.json; English is the default and the fallback for any missing key.
+const I18N = window.LAUNCHER_I18N || { languages: [{ code: "en", name: "English", locale: "en-GB" }], strings: { en: {} } };
+let LANG = "en";
+const langInfo = () => I18N.languages.find((l) => l.code === LANG) || I18N.languages[0];
+/** Plain-text lookup with {placeholders}. */
+function t(key, vars = {}) {
+  const raw = (I18N.strings[LANG] || {})[key] ?? I18N.strings.en[key] ?? key;
+  return raw.replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined ? String(vars[k]) : m));
+}
+/** HTML lookup: placeholders are escaped (pass {__html} to inject markup), **bold** → <b>, [refresh]…[/refresh] etc → links. */
+function th(key, vars = {}) {
+  const safe = {};
+  for (const [k, v] of Object.entries(vars)) safe[k] = v && typeof v === "object" && v.__html !== undefined ? v.__html : escapeHtml(v);
+  return t(key, safe)
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+    .replace(/\[(refresh|login)\](.+?)\[\/\1\]/g, '<a data-act="$1">$2</a>')
+    .replace(/\[(eula|privacy)\](.+?)\[\/\1\]/g, '<a href="#" data-legal="$1">$2</a>');
+}
+const htmlVars = (key) => {
+  if (key === "terms.intro" || key === "login.intro") return { studio: STUDIO };
+  if (key === "settings.serverHint") return { url: { __html: `<code>${escapeHtml(CFG.server.apiUrl || "")}</code>` }, dev: { __html: "<code>http://127.0.0.1:8787</code>" } };
+  return {};
+};
+/** Re-label every static element and rebuild the language dropdowns. */
+function applyI18n() {
+  document.documentElement.lang = langInfo().locale;
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => { el.title = t(el.dataset.i18nTitle); el.setAttribute("aria-label", el.title); });
+  document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = th(el.dataset.i18nHtml, htmlVars(el.dataset.i18nHtml)); });
+  document.querySelectorAll("select.lang-select").forEach((sel) => {
+    sel.innerHTML = I18N.languages.map((l) => `<option value="${l.code}"${l.code === LANG ? " selected" : ""}>${escapeHtml(l.name)}</option>`).join("");
+  });
+}
+async function setLanguage(code, save = true) {
+  LANG = I18N.strings[code] ? code : "en";
+  applyI18n();
+  if (save) {
+    if (state.settings) state.settings.language = LANG;
+    try { await bridge.invoke("set_language", { language: LANG }); } catch (e) { console.warn("set_language", e); }
+  }
+  // Everything rendered from JS carries text too.
+  if (state.settings) renderAccount();
+  if (state.catalog) { renderOffline(); renderList(); renderDetail(); renderFeed(); }
+}
+document.querySelectorAll("select.lang-select").forEach((sel) => { sel.onchange = (e) => setLanguage(e.target.value); });
+
 // ---------- bridge ----------
 const bridge = hasTauri
   ? {
@@ -73,7 +121,7 @@ function renderInline(text) {
 }
 const fmtDate = (d) => {
   const t = new Date(d);
-  return isNaN(t) ? escapeHtml(d) : t.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return isNaN(t) ? escapeHtml(d) : t.toLocaleDateString(langInfo().locale, { day: "numeric", month: "short", year: "numeric" });
 };
 const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -127,8 +175,8 @@ function upgradeUrl() {
   if (a.provider === "subscribestar") return sup.subscribestar || CFG.links.subscribestar || null;
   return sup.patreon || CFG.links.patreonUpgrade || CFG.links.patreon || null;
 }
-const dayOneName = () => state.catalog?.support?.dayOneTierName || "a Day 1 tier";
-function upgradeButton(label = "Upgrade") {
+const dayOneName = () => state.catalog?.support?.dayOneTierName || t("note.dayOneTier");
+function upgradeButton(label = t("btn.upgrade")) {
   const url = upgradeUrl();
   if (!url) return "";
   const brand = state.account.provider === "subscribestar" ? "substar" : "patreon";
@@ -143,23 +191,24 @@ function wireNote(locked) {
   const li = locked.querySelector("[data-act=login]");
   if (li) li.onclick = () => openModal("#modal-login");
 }
-const fmtDateTime = (d) => d.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-const dayLabel = (delayDays) => (delayDays > 0 ? `Day ${delayDays + 1} release` : "Day 1 release");
+const fmtDateTime = (d) => d.toLocaleString(langInfo().locale, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const dayLabel = (delayDays) => (delayDays > 0 ? t("day.n", { n: delayDays + 1 }) : t("day.one"));
 
 // ---------- boot ----------
 async function boot() {
   applyBranding();
   state.settings = await bridge.invoke("get_settings");
+  await setLanguage(state.settings.language || "en", false);
   await ensureTermsAccepted();
   state.account = await bridge.invoke("get_account");
   renderAccount();
-  $("#about-line").textContent = `Launcher v0.1.1 · ${hasTauri ? "Tauri" : "browser preview"}`;
+  $("#about-line").textContent = `Launcher v0.1.2 · ${hasTauri ? "Tauri" : "browser preview"}`;
 
   bridge.listen("install-progress", onProgress);
   bridge.listen("game-exited", (gameId) => { loadAchievements(gameId, true); });
   bridge.listen("launcher-update-progress", (p) => {
-    const t = $("#update-text");
-    t.textContent = p.total ? `Downloading launcher update… ${Math.round((p.downloaded / p.total) * 100)}%` : "Downloading launcher update…";
+    const el = $("#update-text");
+    el.textContent = p.total ? t("update.downloadingPct", { pct: Math.round((p.downloaded / p.total) * 100) }) : t("update.downloading");
   });
   checkLauncherUpdate();
 
@@ -185,7 +234,7 @@ async function loadCatalog() {
     renderDetail();
     loadFeed();
   } catch (e) {
-    $("#detail-empty").innerHTML = `<div class="error"><p><b>Couldn't reach the content server.</b></p><p class="muted">Once you've connected successfully once, the launcher keeps a copy so installed games stay playable offline.</p><p>${escapeHtml(e)}</p><p class="muted small">For local testing run <code>npm run serve</code> in the project folder, then check Settings → Content server.</p></div>`;
+    $("#detail-empty").innerHTML = `<div class="error"><p><b>${th("error.serverTitle")}</b></p><p class="muted">${th("error.serverBody")}</p><p>${escapeHtml(e)}</p><p class="muted small">For local testing run <code>npm run serve</code> in the project folder, then check Settings → Content server.</p></div>`;
     $("#detail-empty").classList.remove("hidden");
     $("#detail-content").classList.add("hidden");
   }
@@ -196,19 +245,15 @@ function renderOffline() {
   if (!b) {
     b = document.createElement("span");
     b.id = "offline-badge"; b.className = "offline-badge";
-    b.textContent = "Offline";
-    b.title = "Can't reach the server — installed games still play; updates resume when you're back online.";
   }
-  if (state.bundled) {
-    b.textContent = "Offline";
-    b.title = "No connection yet — showing the built-in library. Connect to sign in and install.";
-    $(".topbar-spacer").after(b);
-  }
+  b.textContent = t("offline.badge");
+  b.title = state.bundled ? t("offline.bundledTip") : t("offline.tip");
+  if (state.bundled) $(".topbar-spacer").after(b);
   b.classList.toggle("hidden", !state.offline);
 }
 
 async function loadFeed() {
-  if (state.offline) { state.feed = []; state.feedError = "News isn't available offline."; renderFeed(); return; }
+  if (state.offline) { state.feed = []; state.feedError = t("news.offline"); renderFeed(); return; }
   const url = state.catalog.newsFeed || CFG.links.newsFeed;
   try {
     state.feed = await bridge.invoke("get_news_feed", { url });
@@ -222,15 +267,15 @@ async function loadFeed() {
 
 function renderFeed() {
   const el = $("#feed");
-  if (state.feed === null) { el.innerHTML = `<p class="muted">Loading news…</p>`; return; }
+  if (state.feed === null) { el.innerHTML = `<p class="muted">${th("news.loading")}</p>`; return; }
   if (state.feedError) { el.innerHTML = `<p class="muted">${escapeHtml(state.feedError)}</p>`; return; }
-  if (!state.feed.length) { el.innerHTML = `<p class="muted">No news yet.</p>`; return; }
+  if (!state.feed.length) { el.innerHTML = `<p class="muted">${th("news.none")}</p>`; return; }
   el.innerHTML = state.feed.slice(0, 6).map((it) => `
     <div class="post">
       <a class="post-title" data-href="${escapeHtml(it.link)}">${escapeHtml(it.title)}</a>
       <div class="post-date">${fmtDate(it.date)}</div>
       ${it.summary ? `<p>${escapeHtml(it.summary)}</p>` : ""}
-    </div>`).join("") + (CFG.links.newsPage ? `<a class="more" data-href="${escapeHtml(CFG.links.newsPage)}">All news →</a>` : "");
+    </div>`).join("") + (CFG.links.newsPage ? `<a class="more" data-href="${escapeHtml(CFG.links.newsPage)}">${th("news.all")}</a>` : "");
 }
 
 function renderGameNews(g) {
@@ -267,16 +312,16 @@ async function checkLauncherUpdate() {
   try {
     const u = await bridge.invoke("check_launcher_update");
     if (!u) return;
-    $("#update-text").textContent = `Launcher ${u.version} is available${u.notes ? ` — ${u.notes.split("\n")[0]}` : ""}.`;
+    $("#update-text").textContent = u.notes ? t("update.versionAvailableNotes", { version: u.version, notes: u.notes.split("\n")[0] }) : t("update.versionAvailable", { version: u.version });
     $("#update-banner").classList.remove("hidden");
   } catch {}
 }
 $("#btn-update-later").onclick = () => $("#update-banner").classList.add("hidden");
 $("#btn-update-launcher").onclick = async () => {
   const b = $("#btn-update-launcher");
-  b.disabled = true; b.textContent = "Updating…";
+  b.disabled = true; b.textContent = t("update.updating");
   try { await bridge.invoke("install_launcher_update"); }
-  catch (e) { toast(String(e), true); b.disabled = false; b.textContent = "Restart to update"; }
+  catch (e) { toast(String(e), true); b.disabled = false; b.textContent = t("update.restart"); }
 };
 
 // ---------- first run: age + terms ----------
@@ -309,7 +354,7 @@ function ensureTermsAccepted() {
 function renderAccount() {
   const area = $("#account-area");
   if (!state.account) {
-    area.innerHTML = `<button id="btn-login" class="btn-login">Sign in</button>`;
+    area.innerHTML = `<button id="btn-login" class="btn-login">${th("login.signIn")}</button>`;
     $("#btn-login").onclick = () => openModal("#modal-login");
     return;
   }
@@ -319,9 +364,9 @@ function renderAccount() {
     <div class="avatar">${a.avatar ? `<img src="${escapeHtml(a.avatar)}" alt="">` : initials}</div>
     <div>
       <div class="account-name">${escapeHtml(a.displayName)}</div>
-      <div class="account-tier"><span class="dot ${a.provider === "patreon" ? "patreon" : a.provider === "subscribestar" ? "substar" : "code"}"></span> ${escapeHtml(a.tierName || `Tier ${a.tier}`)}</div>
+      <div class="account-tier"><span class="dot ${a.provider === "patreon" ? "patreon" : a.provider === "subscribestar" ? "substar" : "code"}"></span> ${escapeHtml(a.tierName || t("tier.label", { n: a.tier }))}</div>
     </div>
-    <button id="btn-logout" class="btn-text small">Sign out</button>`;
+    <button id="btn-logout" class="btn-text small">${th("login.signOut")}</button>`;
   $("#btn-logout").onclick = async () => {
     await bridge.invoke("logout");
     state.account = null;
@@ -335,11 +380,11 @@ function renderList() {
   for (const g of state.catalog.games) {
     const st = state.status[g.id] || {};
     let dot = "", sub = "";
-    if (g.comingSoon) { sub = "Coming soon"; }
-    else if (st.installed && st.updateAvailable) { dot = "update"; sub = canAccess(g) ? `Update to ${targetVersion(g)}` : `Installed · v${g.latest} available`; }
-    else if (st.installed) { dot = "installed"; sub = `Installed · ${st.installedVersion}`; }
-    else if (!canAccess(g)) { dot = "locked"; sub = `Needs ${g.requiredTierName || "higher tier"}`; }
-    else { sub = "Not installed"; }
+    if (g.comingSoon) { sub = t("list.comingSoon"); }
+    else if (st.installed && st.updateAvailable) { dot = "update"; sub = canAccess(g) ? t("list.updateTo", { version: targetVersion(g) }) : t("list.installedAvailable", { version: g.latest }); }
+    else if (st.installed) { dot = "installed"; sub = t("list.installed", { version: st.installedVersion }); }
+    else if (!canAccess(g)) { dot = "locked"; sub = t("list.needs", { tier: g.requiredTierName || t("list.higherTier") }); }
+    else { sub = t("list.notInstalled"); }
 
     const btn = document.createElement("button");
     btn.className = "game-item" + (g.id === state.selectedId ? " active" : "");
@@ -377,7 +422,7 @@ function renderDetail() {
   $("#history-wrap").classList.toggle("hidden", !(g.versions || []).length);
   cl.innerHTML = g.versions.map((v) => {
     const soon = state.account && canAccess(g) && !versionUnlocked(v);
-    return `<div class="entry${soon ? " pending" : ""}"><div class="entry-head"><b>v${escapeHtml(v.version)}</b><span>${soon ? `unlocks for you ${fmtDate(unlockAtMs(v))}` : fmtDate(v.date || "")}</span></div><p>${renderInline(v.notes || "")}</p></div>`;
+    return `<div class="entry${soon ? " pending" : ""}"><div class="entry-head"><b>v${escapeHtml(v.version)}</b><span>${soon ? th("changelog.unlocks", { date: fmtDate(unlockAtMs(v)) }) : fmtDate(v.date || "")}</span></div><p>${renderInline(v.notes || "")}</p></div>`;
   }).join("");
 
   renderAction();
@@ -402,7 +447,7 @@ function renderAction() {
   const target = targetVersion(g);
   const pending = pendingVersion(g);
   const playBtn = () => {
-    btn.textContent = "Play";
+    btn.textContent = t("common.play");
     btn.classList.add("play");
     btn.onclick = async () => {
       try { await bridge.invoke("play", { gameId: g.id }); }
@@ -411,62 +456,63 @@ function renderAction() {
   };
 
   if (g.comingSoon) {
-    btn.textContent = "Coming soon";
+    btn.textContent = t("list.comingSoon");
     btn.classList.add("locked");
     btn.disabled = true;
     vline.innerHTML = "";
   } else if (busy) {
-    btn.textContent = p.phase === "planning" ? "Preparing…" : p.phase === "finalizing" ? "Installing…" : "Downloading…";
+    btn.textContent = p.phase === "planning" ? t("action.preparing") : p.phase === "finalizing" ? t("action.installing") : t("action.downloading");
     btn.disabled = true;
-    vline.innerHTML = `Installing <b>v${escapeHtml(target)}</b>`;
+    vline.innerHTML = th("action.installingV", { version: target });
   } else if (st.installed && st.updateAvailable && access && !state.offline) {
-    btn.textContent = "Update";
+    btn.textContent = t("common.update");
     btn.classList.add("update");
     btn.onclick = () => startInstall(g);
-    vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> → update to <b>v${escapeHtml(target)}</b>`;
+    vline.innerHTML = th("action.installedUpdate", { installed: st.installedVersion, target });
   } else if (st.installed) {
     // Installed games always play — what you downloaded is yours, whatever
     // happens to your subscription or your connection.
     playBtn();
     if (st.updateAvailable && state.offline) {
-      vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> · update to v${escapeHtml(target)} waiting for a connection`;
+      vline.innerHTML = th("action.installedWaiting", { installed: st.installedVersion, target });
     } else if (st.updateAvailable) {
-      vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> · <b>v${escapeHtml(g.latest)}</b> available`;
+      vline.innerHTML = th("action.installedAvailable", { installed: st.installedVersion, latest: g.latest });
+      const tierName = g.requiredTierName || t("note.supporters");
       locked.innerHTML = state.account
-        ? `Version ${escapeHtml(g.latest)} is available to <b>${escapeHtml(g.requiredTierName || "supporters")}</b>. You're currently on <b>${escapeHtml(state.account.tierName || "Tier " + state.account.tier)}</b> — your installed version keeps working. <a data-act="refresh">Just re-subscribed? Re-check</a>`
-        : `Version ${escapeHtml(g.latest)} is available to <b>${escapeHtml(g.requiredTierName || "supporters")}</b>. <a data-act="login">Sign in</a> to update — your installed version keeps working.`;
-      if (state.account) locked.innerHTML += ` ${upgradeButton("Re-subscribe")}`;
+        ? th("note.availableTo", { latest: g.latest, tier: tierName, current: state.account.tierName || t("tier.label", { n: state.account.tier }) })
+        : th("note.availableSignIn", { latest: g.latest, tier: tierName });
+      if (state.account) locked.innerHTML += ` ${upgradeButton(t("btn.resubscribe"))}`;
       locked.classList.remove("hidden");
       locked.classList.add("info");
       wireNote(locked);
     } else {
-      vline.innerHTML = `Installed <b>v${escapeHtml(st.installedVersion)}</b> · up to date`;
+      vline.innerHTML = th("action.installedUpToDate", { installed: st.installedVersion });
     }
   } else if (state.offline) {
-    btn.textContent = "Offline";
+    btn.textContent = t("action.offline");
     btn.classList.add("locked");
     btn.disabled = true;
-    vline.innerHTML = `Latest <b>v${escapeHtml(g.latest)}</b> · connect to install`;
+    vline.innerHTML = th("action.latestConnect", { latest: g.latest });
   } else if (!access) {
-    btn.textContent = state.account ? "Locked" : "Sign in to download";
+    btn.textContent = state.account ? t("action.locked") : t("action.signInToDownload");
     btn.classList.add("locked");
     btn.onclick = () => (state.account ? null : openModal("#modal-login"));
-    vline.innerHTML = `Latest <b>v${escapeHtml(g.latest)}</b>`;
+    vline.innerHTML = th("action.latest", { latest: g.latest });
     if (state.account) {
-      locked.innerHTML = `This game needs the <b>${escapeHtml(g.requiredTierName || "higher")}</b> tier. You're currently on <b>${escapeHtml(state.account.tierName || "Tier " + state.account.tier)}</b>. <a data-act="refresh">Just upgraded? Re-check</a> ${upgradeButton()}`;
+      locked.innerHTML = `${th("note.needsTier", { tier: g.requiredTierName || t("note.higher"), current: state.account.tierName || t("tier.label", { n: state.account.tier }) })} ${upgradeButton()}`;
       locked.classList.remove("hidden");
       wireNote(locked);
     }
   } else {
-    btn.textContent = "Install";
+    btn.textContent = t("common.install");
     btn.onclick = () => startInstall(g);
-    vline.innerHTML = `Latest <b>v${escapeHtml(target)}</b>`;
+    vline.innerHTML = th("action.latest", { latest: target });
   }
 
   // A newer build exists but this tier's release window hasn't opened yet.
   if (pending && !busy && locked.classList.contains("hidden")) {
     const a = state.account;
-    locked.innerHTML = `<b>v${escapeHtml(pending.version)}</b> is out now for ${escapeHtml(dayOneName())}. On <b>${escapeHtml(a.tierName || "your tier")}</b> (${dayLabel(a.delayDays || 0)}) it unlocks for you on <b>${escapeHtml(fmtDateTime(pending.at))}</b>${upgradeUrl() ? " — or upgrade to play it today. <a data-act=\"refresh\">Just upgraded? Re-check</a>" : "."} ${upgradeButton()}`;
+    locked.innerHTML = `${th("note.pending", { version: pending.version, dayOne: dayOneName(), tier: a.tierName || t("note.yourTier"), day: dayLabel(a.delayDays || 0), date: fmtDateTime(pending.at) })}${upgradeUrl() ? th("note.pendingUpgrade") : "."} ${upgradeButton()}`;
     locked.classList.remove("hidden");
     locked.classList.add("info");
     wireNote(locked);
@@ -480,15 +526,15 @@ function renderAction() {
     $("#progress-bar").style.width = `${pct}%`;
     let left, right = "";
     if (p.phase === "error") {
-      left = `Something went wrong: ${p.message}`;
+      left = t("progress.error", { message: p.message });
     } else if (p.phase === "planning") {
-      left = "Preparing…";
+      left = t("action.preparing");
     } else if (p.phase === "finalizing") {
-      left = st.installed ? "Installing update…" : "Installing…";
+      left = st.installed ? t("progress.installingUpdate") : t("action.installing");
     } else {
-      left = `${st.installed ? "Downloading update" : "Downloading game"} — ${pct.toFixed(pct < 10 ? 1 : 0)}%`;
+      left = t(st.installed ? "progress.downloadingUpdate" : "progress.downloadingGame", { pct: pct.toFixed(pct < 10 ? 1 : 0) });
       const speed = speedOf(g.id, p.bytesDone);
-      right = `${fmtBytes(p.bytesDone)} of ${fmtBytes(p.bytesTotal)}${speed ? ` · ${fmtBytes(speed)}/s` : ""}`;
+      right = `${t("progress.of", { done: fmtBytes(p.bytesDone), total: fmtBytes(p.bytesTotal) })}${speed ? ` · ${fmtBytes(speed)}/s` : ""}`;
     }
     $("#progress-text").innerHTML = `<span>${escapeHtml(left)}</span><span>${escapeHtml(right)}</span>`;
     $("#progress-text").style.color = p.phase === "error" ? "var(--danger)" : "";
@@ -539,7 +585,7 @@ function renderAchievementsModal(g) {
   const unlocked = new Set(prog?.unlocked || []);
   const list = meta?.achievements || [];
   const n = list.filter((a) => unlocked.has(a.name)).length;
-  $("#ach-summary").textContent = `${g.title} — ${n} of ${list.length} unlocked`;
+  $("#ach-summary").textContent = t("ach.summary", { title: g.title, n, total: list.length });
   $("#ach-bar").style.width = list.length ? `${(n / list.length) * 100}%` : "0%";
   const sorted = [...list.filter((a) => unlocked.has(a.name)), ...list.filter((a) => !unlocked.has(a.name))];
   $("#ach-list").innerHTML = sorted.map((a) => {
@@ -549,17 +595,17 @@ function renderAchievementsModal(g) {
     return `<div class="ach ${got ? "unlocked" : "locked"}">
       <img src="${escapeHtml(assetUrl(icon))}" alt="" loading="lazy">
       <div>
-        <div class="ach-name">${hidden ? "Secret achievement" : escapeHtml(a.name)}</div>
-        <div class="ach-hint">${hidden ? "Hidden until you unlock it." : escapeHtml(a.hint || "")}</div>
+        <div class="ach-name">${hidden ? th("ach.secret") : escapeHtml(a.name)}</div>
+        <div class="ach-hint">${hidden ? th("ach.hiddenHint") : escapeHtml(a.hint || "")}</div>
       </div>
     </div>`;
   }).join("");
   const st = state.status[g.id] || {};
   $("#ach-note").textContent = prog
-    ? `Last synced ${prog.updated ? fmtDate(prog.updated) : "recently"} · updates whenever you play.`
+    ? t("ach.lastSynced", { date: prog.updated ? new Date(prog.updated).toLocaleDateString(langInfo().locale, { day: "numeric", month: "short", year: "numeric" }) : t("ach.recently") })
     : st.installed
-      ? "Your progress appears here after you launch the game — play once to sync."
-      : "Install and launch the game to track your progress here.";
+      ? t("ach.playOnce")
+      : t("ach.installFirst");
 }
 
 $("#btn-achievements").onclick = async () => {
@@ -574,7 +620,7 @@ async function recheckTier() {
   try {
     state.account = await bridge.invoke("refresh_account");
     await accountChanged();
-    toast(state.account ? `Tier: ${state.account.tierName || state.account.tier}` : "Signed out");
+    toast(state.account ? t("tier.toast", { tier: state.account.tierName || state.account.tier }) : t("login.signedOut"));
   } catch (e) { toast(String(e), true); }
 }
 
@@ -606,7 +652,7 @@ async function runInstall(g, installDir) {
   renderAction();
   try {
     state.status[g.id] = await bridge.invoke("install_or_update", { gameId: g.id, version: targetVersion(g), title: g.title, installDir });
-    toast(`${g.title} is ready to play`);
+    toast(t("install.ready", { title: g.title }));
   } catch (e) {
     toast(String(e), true);
   }
@@ -619,7 +665,7 @@ let installDlg = { game: null, dir: null, size: 0 };
 async function openInstallDialog(g) {
   const d = await bridge.invoke("get_install_defaults", { title: g.title });
   installDlg = { game: g, dir: d.installDir, size: 0 };
-  $("#install-title").textContent = g.title;
+  $("#install-heading").textContent = t("install.title", { title: g.title });
   $("#install-size").textContent = "…";
   renderInstallDialog(d);
   openModal("#modal-install");
@@ -639,7 +685,7 @@ function renderInstallDialog(d) {
   const warn = $("#install-warning");
   const short = installDlg.size && d.freeBytes && d.freeBytes < installDlg.size * 1.1;
   warn.classList.toggle("hidden", !short);
-  if (short) warn.textContent = "Not enough free space here — pick another location or free some up.";
+  if (short) warn.textContent = t("install.notEnough");
   $("#btn-install-confirm").disabled = !!short;
 }
 $("#btn-browse").onclick = async () => {
@@ -654,14 +700,14 @@ $("#btn-install-confirm").onclick = () => {
 
 // ---------- uninstall confirm ----------
 function openUninstallDialog(g) {
-  $("#uninstall-title").textContent = g.title;
+  $("#uninstall-heading").textContent = t("uninstall.title", { title: g.title });
   $("#uninstall-path").textContent = (state.status[g.id] || {}).installDir || "";
   $("#btn-uninstall-confirm").onclick = async () => {
     closeModals();
     try {
       await bridge.invoke("uninstall", { gameId: g.id });
       state.status[g.id] = await refreshStatus(g);
-      toast(`${g.title} uninstalled`);
+      toast(t("uninstall.done", { title: g.title }));
     } catch (err) { toast(String(err), true); }
     renderList(); renderAction();
   };
@@ -713,7 +759,7 @@ ctx.onclick = (e) => {
 async function verifyFiles(g) {
   try {
     const bad = await bridge.invoke("verify_files", { gameId: g.id });
-    toast(bad ? `${bad} damaged file(s) found — click Update to repair` : "All files verified");
+    toast(bad ? t("verify.damaged", { n: bad }) : t("verify.ok"));
     state.status[g.id] = await refreshStatus(g);
   } catch (err) { toast(String(err), true); }
   renderList(); renderAction();
@@ -742,11 +788,11 @@ document.querySelectorAll("#modal-login .provider").forEach((b) => {
   b.onclick = async () => {
     const provider = b.dataset.provider;
     document.querySelectorAll("#modal-login .provider").forEach((x) => (x.disabled = true));
-    $("#login-status").textContent = "Waiting for you to finish signing in in your browser…";
+    $("#login-status").textContent = t("login.waiting");
     try {
       state.account = await bridge.invoke("login", { provider });
       closeModals();
-      toast(`Signed in as ${state.account.displayName}`);
+      toast(t("login.signedInAs", { name: state.account.displayName }));
       await accountChanged();
     } catch (e) {
       $("#login-status").textContent = String(e);
@@ -762,12 +808,12 @@ async function redeemCode() {
   const code = $("#input-code").value.trim();
   if (!code) return;
   $("#btn-code").disabled = true;
-  $("#login-status").textContent = "Checking code…";
+  $("#login-status").textContent = t("login.checkingCode");
   try {
     state.account = await bridge.invoke("login_with_code", { code });
     closeModals();
     $("#input-code").value = "";
-    toast(`Signed in as ${state.account.displayName}`);
+    toast(t("login.signedInAs", { name: state.account.displayName }));
     await accountChanged();
   } catch (e) {
     $("#login-status").textContent = String(e);
@@ -779,7 +825,7 @@ $("#input-code").addEventListener("keydown", (e) => { if (e.key === "Enter") red
 // settings
 $("#btn-settings").onclick = () => {
   $("#input-server").value = state.settings.serverUrl;
-  $("#terms-accepted-line").textContent = state.settings.acceptedTerms ? `· Terms v${state.settings.acceptedTerms} accepted` : "";
+  $("#terms-accepted-line").textContent = state.settings.acceptedTerms ? t("legal.accepted", { version: state.settings.acceptedTerms }) : "";
   openModal("#modal-settings");
 };
 $("#btn-save-settings").onclick = async () => {
@@ -791,13 +837,19 @@ $("#btn-save-settings").onclick = async () => {
 
 // external links
 const legalLinks = CFG.legal || {};
-for (const [id, url] of [["#link-patreon", CFG.links.patreon], ["#link-substar", CFG.links.subscribestar],
-  ["#link-eula", legalLinks.eulaUrl], ["#link-eula-terms", legalLinks.eulaUrl],
-  ["#link-privacy", legalLinks.privacyUrl], ["#link-privacy-terms", legalLinks.privacyUrl]]) {
+for (const [id, url] of [["#link-patreon", CFG.links.patreon], ["#link-substar", CFG.links.subscribestar]]) {
   const a = $(id);
   if (!url) { a.classList.add("hidden"); continue; }
   a.onclick = (e) => { e.preventDefault(); bridge.invoke("open_external", { url }); };
 }
+// EULA / Privacy links are generated from the dictionary, so they're wired by delegation.
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[data-legal]");
+  if (!a) return;
+  e.preventDefault();
+  const url = a.dataset.legal === "eula" ? legalLinks.eulaUrl : legalLinks.privacyUrl;
+  if (url) bridge.invoke("open_external", { url }).catch((err) => toast(String(err), true));
+});
 
 function openModal(sel) { $(sel).classList.remove("hidden"); $("#login-status").textContent = ""; }
 function closeModals() { document.querySelectorAll(".modal:not(#modal-terms)").forEach((m) => m.classList.add("hidden")); }
@@ -810,6 +862,7 @@ function makeMockBridge() {
   const installed = {};
   let account = null;
   let acceptedTerms = null; // preview: terms screen shows every reload
+  let language = null;
   const serverUrl = location.origin.includes("127.0.0.1:8787") ? location.origin : "http://127.0.0.1:8787";
   const emit = (evt, payload) => (listeners[evt] || []).forEach((cb) => cb(payload));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -817,8 +870,9 @@ function makeMockBridge() {
     listen: (evt, cb) => { (listeners[evt] ||= []).push(cb); },
     async invoke(cmd, args = {}) {
       switch (cmd) {
-        case "get_settings": return { serverUrl, token: account ? "•••" : null, account, acceptedTerms };
+        case "get_settings": return { serverUrl, token: account ? "•••" : null, account, acceptedTerms, language };
         case "set_server_url": return;
+        case "set_language": language = args.language; return;
         case "accept_terms": acceptedTerms = args.version; return;
         case "quit_app": window.close(); return;
         case "get_account": return account;
