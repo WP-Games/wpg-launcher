@@ -13,6 +13,7 @@
  * Picks up whatever builds exist for the current version:
  *   Windows  src-tauri/target/release/bundle/nsis/*_<version>_x64-setup.exe (+ .sig)
  *   Mac      incoming/mac/*.dmg, *.app.tar.gz, *.app.tar.gz.sig
+ *   Linux    incoming/linux/*.AppImage, *.AppImage.sig
  * Published copies are renamed to "<installerName>-v.<version>_<arch>.<ext>" and
  * written to cdn/launcher/<version>/. cdn/launcher/latest.json (Tauri updater
  * feed) and cdn/launcher/download.json (what /launcher/download redirects to)
@@ -96,8 +97,24 @@ if (dmg || tgz) {
   found++;
 }
 
+// ---- Linux (built on the Linux Mint box, files copied into incoming/linux/) ----
+const linuxDir = path.join(ROOT, "incoming", "linux");
+const linuxFiles = await listDir(linuxDir);
+const appimage = linuxFiles.find((f) => f.endsWith(".AppImage") && f.includes(`_${version}_`));
+if (appimage) {
+  const arch = (appimage.match(/_(amd64|x86_64|aarch64|arm64)\.AppImage$/) || [])[1] || "amd64";
+  const signature = await readSig(path.join(linuxDir, `${appimage}.sig`));
+  console.log("Linux:");
+  const published = `${name}-v.${version}_${arch}.AppImage`;
+  const url = await publish(path.join(linuxDir, appimage), published);
+  await fs.copyFile(path.join(linuxDir, `${appimage}.sig`), path.join(outDir, `${published}.sig`));
+  platforms[arch === "aarch64" || arch === "arm64" ? "linux-aarch64" : "linux-x86_64"] = { signature, url };
+  download.linux = { url, file: published };
+  found++;
+}
+
 if (!found) {
-  console.error(`Nothing to release for ${version}.\n  Windows: expected *_${version}_*-setup.exe in ${nsisDir} (run \`npm run build\`).\n  Mac:     expected the .dmg / .app.tar.gz / .sig for ${version} in ${macDir}.\nDid you bump the version in tauri.conf.json and rebuild?`);
+  console.error(`Nothing to release for ${version}.\n  Windows: expected *_${version}_*-setup.exe in ${nsisDir} (run \`npm run build\`).\n  Mac:     expected the .dmg / .app.tar.gz / .sig for ${version} in ${macDir}.\n  Linux:   expected the .AppImage / .sig for ${version} in ${linuxDir}.\nDid you bump the version in tauri.conf.json and rebuild?`);
   process.exit(1);
 }
 
@@ -115,5 +132,5 @@ await fs.writeFile(downloadPath, JSON.stringify(download, null, 2));
 
 console.log(`Launcher ${version} staged for: ${Object.keys(platforms).join(", ")}`);
 console.log(`  updater feed:  ${base}/launcher/latest.json`);
-console.log(`  website link:  ${base}/launcher/download   (Windows: ?platform=windows · Mac: ?platform=mac)`);
+console.log(`  website link:  ${base}/launcher/download   (?platform=windows · ?platform=mac · ?platform=linux)`);
 console.log(`Now run: npm run sync`);

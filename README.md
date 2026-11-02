@@ -495,6 +495,58 @@ and Play launches the `.app`. If Play says "Couldn't start game: permission
 denied", that's the executable-bit fix in `updater.rs` not having run — tell
 Claude.
 
+### Linux build (AppImage, x86_64)
+
+Same idea as the Mac: build on a Linux desktop (WP's Linux Mint machine), copy
+the two output files to the PC, release from the PC as usual.
+
+**One-time setup on the Mint box** (Terminal, Ctrl+Alt+T):
+
+```bash
+sudo apt update
+sudo apt install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev git
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh      # Enter for the default; then open a new terminal
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -   # Node 22 (Mint's own Node is too old)
+sudo apt install -y nodejs
+cd ~ && git clone https://github.com/WP-Games/wpg-launcher.git && cd wpg-launcher && npm install
+```
+
+Copy `wpg-launcher.key` (from the PC's `%USERPROFILE%\.tauri\`) and
+`wpg-launcher-cdn-snapshot.zip` over on the USB stick, then:
+
+```bash
+mkdir -p ~/.tauri && cp /media/$USER/*/wpg-launcher.key ~/.tauri/
+cd ~/wpg-launcher && unzip -o /media/$USER/*/wpg-launcher-cdn-snapshot.zip
+```
+
+**Each release on the Mint box** (after the PC has pushed the new version):
+
+```bash
+cd ~/wpg-launcher && git pull
+export TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/wpg-launcher.key)"
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="<your password>"
+npm run build -- --bundles appimage
+xdg-open src-tauri/target/release/bundle/appimage/
+```
+
+Copy these two files to the PC into `incoming\linux\`:
+
+- `white-phantom-games_<version>_amd64.AppImage` — what players download
+- `white-phantom-games_<version>_amd64.AppImage.sig` — updater signature
+
+Then on the PC: `npm run release -- --notes "…"` and `npm run sync`. The
+release script merges Windows, Mac and Linux into one `latest.json`.
+
+**Player notes for the download page:** right-click the AppImage → Properties
+→ Permissions → "Allow executing file as program" (or `chmod +x`), then
+double-click. Needs WebKitGTK, which Ubuntu/Mint/Fedora/Steam Deck desktop
+already have; on a minimal distro: `sudo apt install libwebkit2gtk-4.1-0`.
+Self-updates replace the AppImage in place.
+
+**Testing on the Mint box:** run the AppImage from the build folder; first run
+shows the 18+ screen; sign in, install the game to `~/Games/White Phantom
+Games/<title>`, Play runs the game's `.sh`.
+
 ### Cloudflare hardening (one-time, dashboard)
 
 - **Login routes are rate limited inside the Worker** (30 requests / 10 s per IP,

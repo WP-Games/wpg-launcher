@@ -182,16 +182,18 @@ async function authMe(request, env) {
   return json(200, token ? { ...account, token } : account);
 }
 
-/// /launcher/download[?platform=windows|mac] → newest installer for that platform.
-/// Without ?platform= we guess from the browser's User-Agent (Mac → .dmg) and
-/// fall back to Windows. download.json: { version, windows: {url,file}, mac: {url,file}, url, file }.
+/// /launcher/download[?platform=windows|mac|linux] → newest installer for that platform.
+/// Without ?platform= we guess from the browser's User-Agent and fall back to Windows.
+/// download.json: { version, windows: {url,file}, mac: {…}, linux: {…}, url, file }.
 async function launcherDownload(env, request, url) {
   const obj = await env.CDN.get("launcher/download.json");
   if (!obj) return text(404, "no launcher release yet");
   const d = await obj.json();
   const ua = request.headers.get("user-agent") || "";
-  const wanted = url.searchParams.get("platform") || (/Macintosh|Mac OS X/i.test(ua) && !/Windows/i.test(ua) ? "mac" : "windows");
-  const pick = (wanted === "mac" ? d.mac : d.windows) || d.windows || d.mac || (d.url ? { url: d.url } : null);
+  const guess = /Macintosh|Mac OS X/i.test(ua) && !/Windows/i.test(ua) ? "mac"
+    : /Linux|X11|CrOS/i.test(ua) && !/Windows|Android/i.test(ua) ? "linux" : "windows";
+  const wanted = url.searchParams.get("platform") || guess;
+  const pick = d[wanted] || d.windows || d.mac || d.linux || (d.url ? { url: d.url } : null);
   if (!pick) return text(404, "no launcher release yet");
   return Response.redirect(pick.url, 302);
 }
