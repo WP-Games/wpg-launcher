@@ -160,6 +160,7 @@ code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 12px; backg
 .menu button.danger { color: var(--danger); }
 
 .locked-note {
+  display: flow-root; /* contain the floated Upgrade button so it never clips the box */
   margin: 18px 28px 0; padding: 12px 14px; border-radius: 10px; background: rgba(255,92,108,.08);
   border: 1px solid rgba(255,92,108,.25); color: #ffb3bb; font-size: 13px; line-height: 1.5;
 }
