@@ -25,13 +25,41 @@ pub fn default_news_feed() -> String {
 }
 
 /// A short per-game announcement pushed via catalog.json ("Game News").
+/// Player-facing text in the catalog: either a plain string (English) or a
+/// map of language code → string, e.g. `{"en": "…", "de": "…"}`. The UI picks
+/// its language and falls back to `en`, then to the first entry. Passed through
+/// to the UI as-is, so the JSON shape is preserved.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum Text {
+    Plain(String),
+    Localized(std::collections::BTreeMap<String, String>),
+}
+
+impl Default for Text {
+    fn default() -> Self {
+        Text::Plain(String::new())
+    }
+}
+
+impl Text {
+    /// English (or the only) value — for logs and non-UI uses.
+    #[allow(dead_code)]
+    pub fn en(&self) -> &str {
+        match self {
+            Text::Plain(s) => s,
+            Text::Localized(m) => m.get("en").or_else(|| m.values().next()).map(String::as_str).unwrap_or(""),
+        }
+    }
+}
+
 /// `text` may contain Markdown-style links: `[Full changelog](https://…)`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameNews {
-    pub title: String,
+    pub title: Text,
     #[serde(default)]
-    pub text: String,
+    pub text: Text,
     #[serde(default)]
     pub date: String,
 }
@@ -42,9 +70,9 @@ pub struct Game {
     pub id: String,
     pub title: String,
     #[serde(default)]
-    pub tagline: String,
+    pub tagline: Text,
     #[serde(default)]
-    pub description: String,
+    pub description: Text,
     /// Relative URL on the CDN, e.g. `games/midnight-manor/cover.png`.
     #[serde(default)]
     pub cover: String,
@@ -97,7 +125,7 @@ pub struct VersionInfo {
     #[serde(default)]
     pub released_at: String,
     #[serde(default)]
-    pub notes: String,
+    pub notes: Text,
 }
 
 /// Per-version file list produced by `tools/publish.mjs`.

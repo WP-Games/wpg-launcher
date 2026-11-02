@@ -566,6 +566,29 @@ The Windows installer shows a language picker (NSIS's own translations;
 `bundle.windows.nsis.languages` in tauri.conf.json). The EULA page in it stays
 English, as does the EULA itself.
 
+**Game text in other languages.** Any player-facing text in `cdn/catalog.json`
+— a game's `tagline`, `description`, each `news[]` item's `title`/`text`, and
+each `versions[]` entry's `notes` — can be either a plain string (English) or
+an object keyed by language code:
+
+```json
+"notes": { "en": "New chapter.", "de": "Neues Kapitel.", "ja": "新章を追加。" }
+```
+
+The launcher shows its language and falls back to English, so untranslated
+entries are fine. `tools/publish.mjs --notes` writes a plain English string;
+to translate release notes, hand the English to Claude (same as a news post),
+paste the object into catalog.json, then `npm run sync` (which re-signs it).
+
+**Achievements** are translated automatically: `tools/achievements-export.mjs`
+reads the game's `tl/<Language>/*.rpy` files (`old`/`new` pairs) and writes an
+`i18n` block per achievement. Re-run it after adding achievements or
+translations, then `npm run sync`. English stays the key the game writes to
+`launcher_achievements.json`, so `launcher_sync.rpy` needs no change.
+
+**News panel.** The launcher fetches `https://whitephantomgames.co.uk/<lang>/rss.xml`
+(English: `/rss.xml`) and falls back to English if a language has no feed.
+
 ### Cloudflare hardening (one-time, dashboard)
 
 - **Login routes are rate limited inside the Worker** (30 requests / 10 s per IP,

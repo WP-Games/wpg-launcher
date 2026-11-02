@@ -71,9 +71,18 @@ async function setLanguage(code, save = true) {
   }
   // Everything rendered from JS carries text too.
   if (state.settings) renderAccount();
-  if (state.catalog) { renderOffline(); renderList(); renderDetail(); renderFeed(); }
+  if (state.catalog) { renderOffline(); renderList(); renderDetail(); state.feed = null; renderFeed(); loadFeed(); }
+  const g = state.catalog && currentGame();
+  if (g && !$("#modal-ach").classList.contains("hidden")) renderAchievementsModal(g);
 }
 document.querySelectorAll("select.lang-select").forEach((sel) => { sel.onchange = (e) => setLanguage(e.target.value); });
+/** Catalog text: a plain string, or {en: "…", de: "…"} → this language, else English, else whatever's there. */
+const L = (v) => (typeof v === "string" ? v : v && typeof v === "object" ? (v[LANG] ?? v.en ?? Object.values(v)[0] ?? "") : (v ?? ""));
+/** Website URLs follow the site's /<lang>/ scheme (English is unprefixed). */
+function siteUrlFor(url, lang = LANG) {
+  if (!url || lang === "en") return url;
+  try { const u = new URL(url); u.pathname = `/${lang}${u.pathname}`; return u.toString(); } catch { return url; }
+}
 
 // ---------- bridge ----------
 const bridge = hasTauri
@@ -254,14 +263,17 @@ function renderOffline() {
 
 async function loadFeed() {
   if (state.offline) { state.feed = []; state.feedError = t("news.offline"); renderFeed(); return; }
-  const url = state.catalog.newsFeed || CFG.links.newsFeed;
+  const base = state.catalog.newsFeed || CFG.links.newsFeed;
+  const lang = LANG;
   try {
-    state.feed = await bridge.invoke("get_news_feed", { url });
+    try { state.feed = await bridge.invoke("get_news_feed", { url: siteUrlFor(base, lang) }); }
+    catch (e) { if (lang === "en") throw e; state.feed = await bridge.invoke("get_news_feed", { url: base }); } // no feed in this language yet → English
     state.feedError = null;
   } catch (e) {
     state.feed = [];
     state.feedError = String(e);
   }
+  if (lang !== LANG) return; // language changed while loading; the newer load will render
   renderFeed();
 }
 
@@ -275,7 +287,7 @@ function renderFeed() {
       <a class="post-title" data-href="${escapeHtml(it.link)}">${escapeHtml(it.title)}</a>
       <div class="post-date">${fmtDate(it.date)}</div>
       ${it.summary ? `<p>${escapeHtml(it.summary)}</p>` : ""}
-    </div>`).join("") + (CFG.links.newsPage ? `<a class="more" data-href="${escapeHtml(CFG.links.newsPage)}">${th("news.all")}</a>` : "");
+    </div>`).join("") + (CFG.links.newsPage ? `<a class="more" data-href="${escapeHtml(siteUrlFor(CFG.links.newsPage))}">${th("news.all")}</a>` : "");
 }
 
 function renderGameNews(g) {
@@ -284,8 +296,8 @@ function renderGameNews(g) {
   $("#card-game-news").classList.toggle("hidden", items.length === 0);
   el.innerHTML = items.map((n) => `
     <div class="item">
-      <div class="item-head"><b>${escapeHtml(n.title)}</b>${n.date ? `<span>${fmtDate(n.date)}</span>` : ""}</div>
-      ${n.text ? `<p>${renderInline(n.text)}</p>` : ""}
+      <div class="item-head"><b>${escapeHtml(L(n.title))}</b>${n.date ? `<span>${fmtDate(n.date)}</span>` : ""}</div>
+      ${L(n.text) ? `<p>${renderInline(L(n.text))}</p>` : ""}
     </div>`).join("");
 }
 
@@ -413,8 +425,8 @@ function renderDetail() {
   const hero = $("#hero");
   hero.style.backgroundImage = g.hero ? `url("${assetUrl(g.hero)}")` : "linear-gradient(160deg,#2a2f44,#161925)";
   $("#game-title").textContent = g.title;
-  $("#game-tagline").textContent = g.tagline || "";
-  $("#game-desc").textContent = g.description || "";
+  $("#game-tagline").textContent = L(g.tagline);
+  $("#game-desc").textContent = L(g.description);
 
   renderGameNews(g);
 
@@ -422,7 +434,7 @@ function renderDetail() {
   $("#history-wrap").classList.toggle("hidden", !(g.versions || []).length);
   cl.innerHTML = g.versions.map((v) => {
     const soon = state.account && canAccess(g) && !versionUnlocked(v);
-    return `<div class="entry${soon ? " pending" : ""}"><div class="entry-head"><b>v${escapeHtml(v.version)}</b><span>${soon ? th("changelog.unlocks", { date: fmtDate(unlockAtMs(v)) }) : fmtDate(v.date || "")}</span></div><p>${renderInline(v.notes || "")}</p></div>`;
+    return `<div class="entry${soon ? " pending" : ""}"><div class="entry-head"><b>v${escapeHtml(v.version)}</b><span>${soon ? th("changelog.unlocks", { date: fmtDate(unlockAtMs(v)) }) : fmtDate(v.date || "")}</span></div><p>${renderInline(L(v.notes))}</p></div>`;
   }).join("");
 
   renderAction();
@@ -595,8 +607,8 @@ function renderAchievementsModal(g) {
     return `<div class="ach ${got ? "unlocked" : "locked"}">
       <img src="${escapeHtml(assetUrl(icon))}" alt="" loading="lazy">
       <div>
-        <div class="ach-name">${hidden ? th("ach.secret") : escapeHtml(a.name)}</div>
-        <div class="ach-hint">${hidden ? th("ach.hiddenHint") : escapeHtml(a.hint || "")}</div>
+        <div class="ach-name">${hidden ? th("ach.secret") : escapeHtml(a.i18n?.[LANG]?.name || a.name)}</div>
+        <div class="ach-hint">${hidden ? th("ach.hiddenHint") : escapeHtml(a.i18n?.[LANG]?.hint || a.hint || "")}</div>
       </div>
     </div>`;
   }).join("");
