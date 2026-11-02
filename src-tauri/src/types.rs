@@ -206,6 +206,9 @@ pub struct Settings {
     /// None → `<home>/Games/<launcher.installFolder from launcher.config.json>`.
     #[serde(default)]
     pub install_root: Option<String>,
+    /// `legal.termsVersion` the user accepted on the first-run screen (None → not yet).
+    #[serde(default)]
+    pub accepted_terms: Option<String>,
 }
 
 impl Default for Settings {
@@ -217,6 +220,7 @@ impl Default for Settings {
             token: None,
             account: None,
             install_root: None,
+            accepted_terms: None,
         }
     }
 }

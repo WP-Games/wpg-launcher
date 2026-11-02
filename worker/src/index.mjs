@@ -105,7 +105,7 @@ async function authCallback(provider, url, env) {
     const tok = await prov.exchange(env, url.searchParams.get("code"), callbackUrl(env, provider));
     const account = await prov.lookup(tok.access_token);
     const token = await issueToken(env, provider, account, tok);
-    console.log(`login ${provider} ${account.displayName} tier=${account.tier} (${account.tierName}) status=${account.patronStatus} id=${account.userId}`);
+    console.log(`login ${provider} id=${account.userId} tier=${account.tier} (${account.tierName}) status=${account.patronStatus}`); // no name: the launcher shows it, we don't need to keep it
     return back(`token=${encodeURIComponent(token)}`);
   } catch (e) {
     console.error("login failed", provider, e);

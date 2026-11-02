@@ -94,6 +94,20 @@ fn set_server_url(state: State<AppState>, url: String) -> Result<(), String> {
     store::save_settings(&state.app_data, &s).map_err(err)
 }
 
+/// First-run screen: the user ticked "I am 18+ and accept the EULA and Privacy Policy".
+#[tauri::command]
+fn accept_terms(state: State<AppState>, version: String) -> Result<(), String> {
+    let mut s = state.settings();
+    s.accepted_terms = Some(version.trim().to_string());
+    store::save_settings(&state.app_data, &s).map_err(err)
+}
+
+/// First-run screen: the user declined.
+#[tauri::command]
+fn quit_app(app: AppHandle) {
+    app.exit(0);
+}
+
 #[tauri::command]
 fn get_account(state: State<AppState>) -> Option<Account> {
     state.settings().account
@@ -657,6 +671,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_settings,
             set_server_url,
+            accept_terms,
+            quit_app,
             get_account,
             login,
             login_with_code,

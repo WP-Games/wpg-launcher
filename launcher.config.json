@@ -33,5 +33,12 @@
     "patreon": "https://www.patreon.com/whitephantomgames",
     "patreonUpgrade": "https://www.patreon.com/whitephantomgames/membership",
     "subscribestar": "https://subscribestar.art/white-phantom-games"
+  },
+
+  "legal": {
+    "$comment": "Links for the first-run 'I am 18+ and accept' screen and Settings. Bump termsVersion when the EULA/privacy policy changes and every player is asked again. The installer's licence page uses src-tauri/EULA.txt (keep it in step with the EULA PDF).",
+    "eulaUrl": "https://whitephantomgames.co.uk/eula.pdf",
+    "privacyUrl": "https://whitephantomgames.co.uk/privacy",
+    "termsVersion": "2.3"
   }
 }

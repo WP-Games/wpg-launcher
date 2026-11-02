@@ -1,0 +1,388 @@
+End User Licence Agreement
+
+White Phantom Games
+
+Version 2.3 — November 2026 | Effective from publication; supersedes Version 2.2
+
+You may not use, install or access White Phantom Games software unless you agree to this
+End User Licence Agreement and all of the terms and conditions contained herein. Any form
+of use of White Phantom Games software signifies acceptance of these terms.
+
+1. Introduction
+
+This End User Licence Agreement ("EULA") is a legal agreement between you (whether an
+individual or a commercial entity) ("the User") and White Phantom Games ("WPG") that
+governs your use of any software created by White Phantom Games. This EULA applies to all
+software published by WPG, including but not limited to Defending Lydia Collier and
+Shadows over Manston: The Manifest.
+
+This EULA also governs the WPG Launcher ("the Launcher"), the desktop application through
+which supporters on Patreon and SubscribeStar download and update WPG software. Sections
+2.2, 3(i) and 6.2 apply only to Users of the Launcher. Users who obtain WPG software
+through Steam or itch.io do not use the Launcher, and those Sections do not apply to them.
+
+By clicking "I Accept", or by taking any steps to install, access, or use the software,
+you declare that:
+
+  (a) you are at least eighteen (18) years of age, or the higher of the age of majority in
+  your jurisdiction and the legal age required to access adult material in your
+  jurisdiction, whichever is greatest;
+
+  (b) if applicable, you are authorised by your employer to enter into this agreement; and
+
+  (c) you agree to be bound by the terms and conditions of this EULA.
+
+If you do not accept these terms, do not use this software.
+
+2. Licence Grant
+
+WPG grants you a revocable, non-transferable, non-exclusive, limited right to use the
+software in accordance with the terms of this EULA. This licence is a licence for personal
+use only. You do not own the software, nor is the software sold to you as part of this
+licence. Any rights not expressly granted by this EULA are reserved by WPG.
+
+2.1 Subscription-Acquired Content. Where the software is obtained through a
+subscription-based platform (including Patreon and SubscribeStar), the licence granted
+under this Section applies to any version of the software lawfully downloaded by the User
+during an active subscription period. The User's right to continue using such downloaded
+versions shall not be revoked upon the termination, expiration, or cancellation of the
+User's subscription, and shall continue to be governed by this EULA subject only to the
+termination provisions in Section 5. For the avoidance of doubt, cancellation of a
+subscription does not entitle the User to access, download, or receive new versions,
+updates, patches, or additional content released after the cancellation date, except where
+re-subscription occurs or such content is obtained through another official distribution
+channel.
+
+2.2 The WPG Launcher (Launcher Users only). The Launcher is WPG software and is licensed
+to you under this Section for the sole purposes of signing in with your own Patreon or
+SubscribeStar account (or an access code issued to you by WPG), downloading and updating
+the WPG software to which your membership entitles you, and launching that software. Which
+versions you may download, and from what date, is determined by your membership tier and
+any release windows set by WPG, as shown in the Launcher; these may change from time to
+time and form part of the entitlement described in Section 2.1. They do not affect your
+right to continue using versions you have already downloaded. The Launcher may check for
+and install updates to itself automatically. The Launcher is provided for Microsoft
+Windows only.
+
+3. Restrictions on Use
+
+You shall use the software exclusively within the restrictions granted by this licence.
+Any deviation from or breach of these terms shall be considered a breach of the agreement
+in full. The following uses are prohibited:
+
+  (a) You may not decompile, reverse engineer, disassemble, or attempt to derive or alter
+  the source code of the software, except as expressly permitted under Section 4.
+
+  (b) You may not use the software in violation of any applicable laws or regulations.
+
+  (c) You may not use this software if you are under eighteen (18) years of age, the age
+  of majority in your jurisdiction, or the legal age required to access adult material in
+  your jurisdiction, whichever is greatest.
+
+  (d) You may not use this software for any commercial purpose whatsoever, including but
+  not limited to generating advertising revenue, direct sales, or any form of
+  monetisation, except as expressly permitted under Section 4.
+
+  (e) You may not redistribute, host, re-upload, or make available for download any WPG
+  software or any part thereof. All distribution of WPG software is conducted exclusively
+  through official distribution channels, namely Steam, itch.io, Patreon, SubscribeStar,
+  and, for Patreon and SubscribeStar supporters, the WPG Launcher. The Launcher itself may
+  be downloaded from the WPG website (www.whitephantomgames.co.uk) or from WPG's own
+  servers; no game software is distributed directly through the website. Any unauthorised
+  distribution is strictly prohibited.
+
+  (f) You may not use the software in any way that would result in unsolicited
+  communications or automated queries to any third party or to WPG.
+
+  (g) You may not use any proprietary information, likeness, or interfaces of WPG, or any
+  other intellectual property of WPG, in the design, development, manufacture, licensing,
+  or distribution of any applications, devices, or software without the express written
+  consent of WPG. Any such use shall be considered unauthorised and in violation of this
+  EULA unless specific, explicit consent has been obtained via the contact details in
+  Section 14.
+
+  (h) You may not use the software, its assets, source code, scripts, dialogue, character
+  designs, rendered images, audio, music, or any other content contained within or
+  extracted from the software, for the purpose of training, fine-tuning, evaluating,
+  benchmarking, or otherwise developing any machine learning model, artificial
+  intelligence system, generative AI system, or similar automated system. You may not use
+  the outputs of the software to produce, derive, or generate AI-generated works. This
+  restriction applies regardless of whether the model or system is intended for personal,
+  academic, non-commercial, or commercial use, and applies in addition to the intellectual
+  property protections set out in Section 12.
+
+  (i) (Launcher Users only) You may not share your Launcher sign-in, session, or access
+  code with any other person, sign in to the Launcher with an account that is not your
+  own, or attempt to circumvent, disable, or interfere with the Launcher's entitlement
+  checks, release windows, download verification, or update mechanism.
+
+4. Exceptions on Restrictions
+
+WPG permits the following exceptions to the restrictions set out in Section 3:
+
+4.1 Content Creation. You are permitted to produce videos, livestreams, and video
+walkthroughs of WPG software as part of this licence. Such content may be monetised
+through standard platform mechanisms (e.g. YouTube ad revenue, Twitch subscriptions).
+Content must not be hidden behind a paywall or login requirement, and must not include
+download links to any WPG software.
+
+4.2 Modifications and Translations. You are permitted to create and distribute
+modifications ("mods") for WPG software, subject to the following conditions:
+
+  (i) Mods must be distributed as additional content only and must not replace, remove, or
+  alter any official game content, including but not limited to main menu links, the
+  game's about section, in-game links, or any content attributed to the "Narrator" or
+  "White Phantom" characters.
+
+  (ii) An exception to clause 4.2(i) is permitted where changes affect in-game dialogue
+  only, such as renaming characters, altering relationships, or modifying what characters
+  say, provided this does not affect content attributed to the "Narrator" or "White
+  Phantom" characters.
+
+  (iii) Translation mods must be faithful, accurate replications of the original English
+  content. Translated content must not deliberately misrepresent, materially add to, or
+  materially remove from the meaning of the English source material.
+
+  (iv) You may not charge a fee for any mod or translation. Mods and translations must be
+  made freely available.
+
+  (v) Mods may not depict, imply, or represent any character as being under the age of
+  eighteen (18), nor may they alter, reinterpret, or present any character in a manner
+  that suggests the character is a minor. Any mod found to be in violation of this clause
+  will be considered a serious breach of this agreement, and WPG reserves the right to
+  pursue all available remedies, including but not limited to issuing takedown requests
+  and reporting the violation to the relevant platform or authorities.
+
+  (vi) Mods and translations must not include or bundle any WPG software. They must be
+  distributed separately and require the user to have obtained the game through an
+  official distribution channel.
+
+  (vii) Mods and translations must not violate clause 3(h). Mods produced using generative
+  AI systems trained on WPG software, or which incorporate AI-generated content derived
+  from WPG assets, are prohibited.
+
+4.3 Cease and Desist. In the event that you are contacted by WPG with a request to cease
+any activity permitted under this Section, you must comply immediately, regardless of any
+exception granted herein. Failure to comply will result in the termination of this
+agreement under Section 5.
+
+5. Termination of Agreement
+
+This agreement is effective upon your acceptance, or upon your downloading, installing,
+accessing, or otherwise using any WPG software, even if you have not expressly accepted
+this agreement. This agreement will remain in effect until it is terminated or superseded
+by an updated EULA issued by WPG.
+
+Without prejudice to any other rights, this agreement will automatically terminate without
+notice if you fail to comply with any of its terms. You may also terminate this agreement
+at any time by permanently removing all WPG software from your devices and any associated
+platforms.
+
+Upon termination, you must remove all WPG software from any device, cloud storage, or
+remote location where it is stored.
+
+5.1 Updates to this Agreement. WPG reserves the right to issue updated versions of this
+EULA from time to time. Notice of any updated EULA will be provided through the official
+distribution channels, the official Discord server, in-game or Launcher notification, or
+by publication on www.whitephantomgames.co.uk. Your continued use of the software
+following such notice shall constitute acceptance of the updated EULA. If you do not
+accept the updated terms, your sole remedy is to terminate this agreement by removing all
+WPG software in accordance with this Section.
+
+5.2 Survival. Notwithstanding termination of this agreement for any reason, Sections 3(g),
+3(h), 7 (Limitation of Liability), 8 (Indemnification by the User), 10 (Warranty
+Disclaimer), 11 (Governing Law and Jurisdiction), 12 (Copyright and Intellectual
+Property), 13 (Communications), and 15 (Severability), together with any other provisions
+which by their nature should survive termination, shall continue in full force and effect.
+
+6. Data and Privacy
+
+6.1 Game Software. WPG game software is entirely offline and does not collect, transmit,
+or store any personal data. No analytics, telemetry, crash reports, or usage data of any
+kind are gathered by the games. This applies to every copy of a WPG game however it was
+obtained, including through Steam, itch.io, Patreon, SubscribeStar, or the Launcher.
+
+6.2 The WPG Launcher (Launcher Users only). Unlike the games, the Launcher necessarily
+communicates with WPG's server in order to verify your membership and deliver downloads.
+When you sign in, Patreon or SubscribeStar provides WPG with your account ID on that
+platform, your display name and profile picture, and your membership tier and status. Your
+name and picture are shown in the Launcher on your own device and are not retained by WPG.
+WPG's server records your account ID and tier in its logs for up to three days for
+security and troubleshooting. The Launcher does not collect analytics, telemetry, or usage
+data. Full details, including the legal bases for this processing and your rights under UK
+GDPR, are set out in Section 4 of the WPG Privacy Policy at
+www.whitephantomgames.co.uk/privacy. This Section 6.2 does not apply to software obtained
+through Steam or itch.io.
+
+6.3 Discord Rich Presence. WPG software may include an optional, opt-in Discord Rich
+Presence feature. When enabled by the User, this feature displays the User's current
+gameplay status on their Discord profile. This feature is disabled by default and requires
+the User to explicitly enable it. No data is collected or stored by WPG through this
+feature; it operates solely through Discord's own API and is subject to Discord's privacy
+policy.
+
+6.4 Voluntary Bug Reports. Users may voluntarily submit bug reports or feedback via the
+official WPG Discord server or the WPG website. Any information submitted in this manner
+is provided at the User's own discretion. WPG will only use such information for the
+purpose of identifying and resolving software issues, on the lawful basis of legitimate
+interests under UK GDPR.
+
+6.5 Website. The WPG website (www.whitephantomgames.co.uk) uses cookies and similar
+technologies as described in its Privacy Policy. The website's use of cookies is separate
+from and independent of the game software and the Launcher.
+
+7. Limitation of Liability
+
+To the fullest extent permitted by law, WPG, its affiliates, partners, suppliers,
+licensors, and employees shall not be liable for any indirect, consequential, special,
+incidental, or exemplary damages arising out of or in connection with your use of, or
+inability to use, the software and/or any third-party content or services, whether or not
+the damages were foreseeable and whether or not WPG was advised of the possibility of such
+damages.
+
+Without limiting the generality of the foregoing, WPG's aggregate liability to you
+(whether under contract, tort, statute, or otherwise) shall not exceed twenty-five pounds
+sterling (£25.00).
+
+Nothing in this Section shall limit or exclude WPG's liability for death or personal
+injury caused by negligence, for fraud or fraudulent misrepresentation, or for any other
+liability that cannot lawfully be excluded or limited under the laws of England and Wales.
+
+8. Indemnification by the User
+
+You agree to indemnify, defend, and hold harmless WPG, its sole proprietor, affiliates,
+partners, suppliers, licensors, and employees (each an "Indemnified Party") from and
+against any and all claims, demands, actions, proceedings, losses, damages, liabilities,
+fines, costs, and expenses (including reasonable legal fees) arising out of or in
+connection with:
+
+  (a) your breach of this EULA, including but not limited to any breach of Section 3
+  (Restrictions on Use) or Section 4 (Exceptions on Restrictions);
+
+  (b) your violation of any applicable law or regulation in connection with your use of
+  the software, including but not limited to laws relating to the protection of minors,
+  intellectual property, data protection, and online safety;
+
+  (c) your infringement of any third-party right, including without limitation
+  intellectual property rights, privacy rights, or rights of publicity, in connection with
+  your use of, or activities permitted under, this EULA; and
+
+  (d) any mod, translation, content, communication, or other material you create,
+  distribute, upload, or otherwise make available in connection with WPG software.
+
+WPG reserves the right, at its own expense, to assume the exclusive defence and control of
+any matter otherwise subject to indemnification by you, in which event you shall cooperate
+fully with WPG in asserting any available defences. You shall not settle any claim subject
+to this Section without the prior written consent of WPG.
+
+Nothing in this Section shall require you to indemnify any Indemnified Party in respect of
+that party's own fraud, gross negligence, or wilful misconduct, or in respect of any
+liability that cannot lawfully be the subject of an indemnity under the laws of England
+and Wales.
+
+9. Limited Warranty
+
+WPG does not provide a warranty beyond that which is required under the Consumer Rights
+Act 2015. In the event that you encounter a defect that prevents the software from being
+of satisfactory quality, fit for purpose, or as described, you must contact WPG promptly.
+WPG will endeavour to provide a resolution within thirty (30) days, which may take the
+form of an updated file that resolves the issue, or a refund of the purchase price where
+applicable.
+
+This warranty applies only where the software was obtained through an official
+distribution channel (including Steam, itch.io, Patreon, SubscribeStar, or the Launcher).
+WPG's obligations under this warranty are limited to the remedies stated above.
+
+9.1 Steam Refunds. Where the software is purchased through Steam, refunds are subject to
+Steam's refund policy and must be requested through Steam. Nothing in this agreement is
+intended to interfere with or restrict Steam's refund processes.
+
+10. Warranty Disclaimer
+
+Except for the sole limited warranty provided by Section 9, WPG disclaims any and all
+other warranties, whether express, implied, or statutory, including without limitation any
+implied warranties of merchantability, satisfactory quality, fitness for a particular
+purpose, accuracy, timeliness, title, or non-infringement of third-party rights, to the
+fullest extent authorised by law.
+
+11. Governing Law and Jurisdiction
+
+WPG is registered and operates in the United Kingdom. This agreement shall be governed by
+and construed in accordance with the laws of England and Wales. You agree that any dispute
+arising from or in connection with this agreement or any WPG software shall be subject to
+the exclusive jurisdiction of the courts of England and Wales.
+
+Nothing in this agreement shall affect any statutory rights that cannot be waived or
+limited by contract under applicable consumer protection law.
+
+12. Copyright and Intellectual Property
+
+Certain audio and non-rendered visual assets included in WPG software are used under
+licence held by WPG. Any dispute regarding such assets may be resolved by contacting WPG
+using the details provided in Section 14.
+
+Notwithstanding the above, all rendered images, logos, service marks, game scripts,
+storylines, character designs, and all other original content created by WPG are the
+exclusive intellectual property of White Phantom Games. This agreement does not grant you
+any right, licence, or interest in such intellectual property, and you shall not assert
+any right, licence, or interest in such property or any works that are confusingly similar
+thereto.
+
+For the avoidance of doubt, and without limiting clause 3(h), no right is granted to use
+any WPG intellectual property as input to, or training data for, any machine learning or
+artificial intelligence system.
+
+Any unauthorised use or redistribution of WPG intellectual property constitutes a breach
+of this agreement and may also constitute an infringement under the Copyright, Designs and
+Patents Act 1988, the UK retained law derived from applicable EU directives, and in all
+applicable jurisdictions, the Digital Millennium Copyright Act of 1998 and the WIPO
+Copyright Treaty.
+
+13. Communications
+
+This agreement may not be modified or altered in any way other than by authorised
+representatives of WPG. Acceptance of this agreement constitutes acceptance of the
+agreement in full. Any purported acceptance of only part of this agreement, or rejection
+of individual terms, shall constitute a rejection of the agreement in its entirety, and
+the termination procedure under Section 5 shall apply.
+
+All official communications with WPG must be made in the English language. WPG is a
+sole-proprietor operation based exclusively in the United Kingdom and does not have the
+resources to process communications in any other language. Communications sent in any
+language other than English will not be processed and will not be deemed to have been
+received.
+
+As WPG operates as a digital-only company, email shall be the primary means of official
+contact. All communications must be made in plain text. Messages containing links,
+embedded content, or attachments (other than plain text documents) will not be processed,
+except that screenshots, save files, and log files may be attached to bug reports
+submitted via the official Discord server or the WPG website.
+
+No rights under this agreement, including warranty or legal claims, shall be deemed to
+have been exercised unless communicated in accordance with this Section.
+
+14. Contact
+
+White Phantom Games may be contacted officially at:
+
+Email: contact@whitephantomgames.co.uk
+
+Registered Address: White Phantom Games, 167-169 Great Portland Street, 5th Floor, London,
+W1W 5PF
+
+For bug reports and community support, you may also reach WPG via the official Discord
+server. Please note that Discord communications do not constitute official contact for the
+purposes of this agreement.
+
+15. Severability
+
+If any provision of this agreement is found to be unlawful, void, or unenforceable by a
+court of competent jurisdiction, that provision shall be deemed severable from this
+agreement and shall not affect the validity or enforceability of the remaining provisions,
+which shall continue in full force and effect.
+
+16. End of Agreement
+
+This is the end of the agreement.
+
+© 2018-2026 White Phantom Games. All rights reserved.

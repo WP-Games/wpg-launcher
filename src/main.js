@@ -150,6 +150,7 @@ const dayLabel = (delayDays) => (delayDays > 0 ? `Day ${delayDays + 1} release` 
 async function boot() {
   applyBranding();
   state.settings = await bridge.invoke("get_settings");
+  await ensureTermsAccepted();
   state.account = await bridge.invoke("get_account");
   renderAccount();
   $("#about-line").textContent = `Launcher v0.1.1 · ${hasTauri ? "Tauri" : "browser preview"}`;
@@ -277,6 +278,32 @@ $("#btn-update-launcher").onclick = async () => {
   try { await bridge.invoke("install_launcher_update"); }
   catch (e) { toast(String(e), true); b.disabled = false; b.textContent = "Restart to update"; }
 };
+
+// ---------- first run: age + terms ----------
+// Blocks until the user has accepted the current legal.termsVersion (stored in
+// settings.json). Shown again whenever that version changes in launcher.config.json.
+function ensureTermsAccepted() {
+  const legal = CFG.legal || {};
+  const version = legal.termsVersion || "1";
+  if (state.settings.acceptedTerms === version) return Promise.resolve();
+  return new Promise((resolve) => {
+    const chk = $("#chk-terms"), ok = $("#btn-terms-accept");
+    chk.checked = false; ok.disabled = true;
+    chk.onchange = () => (ok.disabled = !chk.checked);
+    ok.onclick = async () => {
+      if (!chk.checked) return;
+      ok.disabled = true;
+      try { await bridge.invoke("accept_terms", { version }); }
+      catch (e) { toast(String(e), true); ok.disabled = false; return; }
+      state.settings.acceptedTerms = version;
+      $("#modal-terms").classList.add("hidden");
+      resolve();
+    };
+    $("#btn-terms-quit").onclick = () => bridge.invoke("quit_app").catch(() => window.close());
+    $("#modal-terms").classList.remove("hidden");
+    chk.focus();
+  });
+}
 
 // ---------- rendering ----------
 function renderAccount() {
@@ -750,7 +777,11 @@ $("#btn-code").onclick = redeemCode;
 $("#input-code").addEventListener("keydown", (e) => { if (e.key === "Enter") redeemCode(); });
 
 // settings
-$("#btn-settings").onclick = () => { $("#input-server").value = state.settings.serverUrl; openModal("#modal-settings"); };
+$("#btn-settings").onclick = () => {
+  $("#input-server").value = state.settings.serverUrl;
+  $("#terms-accepted-line").textContent = state.settings.acceptedTerms ? `· Terms v${state.settings.acceptedTerms} accepted` : "";
+  openModal("#modal-settings");
+};
 $("#btn-save-settings").onclick = async () => {
   await bridge.invoke("set_server_url", { url: $("#input-server").value });
   state.settings = await bridge.invoke("get_settings");
@@ -759,14 +790,17 @@ $("#btn-save-settings").onclick = async () => {
 };
 
 // external links
-for (const [id, url] of [["#link-patreon", CFG.links.patreon], ["#link-substar", CFG.links.subscribestar]]) {
+const legalLinks = CFG.legal || {};
+for (const [id, url] of [["#link-patreon", CFG.links.patreon], ["#link-substar", CFG.links.subscribestar],
+  ["#link-eula", legalLinks.eulaUrl], ["#link-eula-terms", legalLinks.eulaUrl],
+  ["#link-privacy", legalLinks.privacyUrl], ["#link-privacy-terms", legalLinks.privacyUrl]]) {
   const a = $(id);
   if (!url) { a.classList.add("hidden"); continue; }
   a.onclick = (e) => { e.preventDefault(); bridge.invoke("open_external", { url }); };
 }
 
 function openModal(sel) { $(sel).classList.remove("hidden"); $("#login-status").textContent = ""; }
-function closeModals() { document.querySelectorAll(".modal").forEach((m) => m.classList.add("hidden")); }
+function closeModals() { document.querySelectorAll(".modal:not(#modal-terms)").forEach((m) => m.classList.add("hidden")); }
 document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = closeModals));
 document.querySelectorAll(".modal").forEach((m) => m.addEventListener("click", (e) => { if (e.target === m) closeModals(); }));
 
@@ -775,6 +809,7 @@ function makeMockBridge() {
   const listeners = {};
   const installed = {};
   let account = null;
+  let acceptedTerms = null; // preview: terms screen shows every reload
   const serverUrl = location.origin.includes("127.0.0.1:8787") ? location.origin : "http://127.0.0.1:8787";
   const emit = (evt, payload) => (listeners[evt] || []).forEach((cb) => cb(payload));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -782,8 +817,10 @@ function makeMockBridge() {
     listen: (evt, cb) => { (listeners[evt] ||= []).push(cb); },
     async invoke(cmd, args = {}) {
       switch (cmd) {
-        case "get_settings": return { serverUrl, token: account ? "•••" : null, account };
+        case "get_settings": return { serverUrl, token: account ? "•••" : null, account, acceptedTerms };
         case "set_server_url": return;
+        case "accept_terms": acceptedTerms = args.version; return;
+        case "quit_app": window.close(); return;
         case "get_account": return account;
         case "refresh_account": return account;
         case "logout": account = null; return;
