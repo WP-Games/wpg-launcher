@@ -9,6 +9,7 @@
     "dev": "tauri dev",
     "build": "tauri build",
     "publish": "node tools/publish.mjs",
+    "publish:android": "node tools/publish-android.mjs",
     "demo:v1": "node tools/publish.mjs midnight-manor 0.1.0 sample-game/v0.1.0 --exe MidnightManor.bat --cdn sample-game/cdn --notes \"First playable build. Explore the ground floor of the manor.\"",
     "demo:v2": "node tools/publish.mjs midnight-manor 0.1.1 sample-game/v0.1.1 --exe MidnightManor.bat --cdn sample-game/cdn --notes \"Added a new scene in the hallway. Removed an unused background.\"",
     "pretest": "node tools/configure.mjs",

@@ -81,8 +81,10 @@ if (rcloneOk) {
   };
   // 1) game objects: immutable, so anything already in the bucket is skipped by name
   run("Game files (new objects only)…", ["copy", CDN, `r2:${BUCKET}`, ...common, "--filter", "+ games/*/objects/**", "--filter", "- **", "--ignore-existing"]);
+  // 1b) Android APKs: one file per version folder, never rewritten → skip by name too
+  run("Android builds (new versions only)…", ["copy", CDN, `r2:${BUCKET}`, ...common, "--filter", "+ games/*/android/**", "--filter", "- **", "--ignore-existing"]);
   // 2) everything else (catalog, manifests, artwork): small, compared by checksum
-  run("Catalog, manifests, artwork…", ["copy", CDN, `r2:${BUCKET}`, ...common, "--filter", "- games/*/objects/**", "--checksum"]);
+  run("Catalog, manifests, artwork…", ["copy", CDN, `r2:${BUCKET}`, ...common, "--filter", "- games/*/objects/**", "--filter", "- games/*/android/**", "--checksum"]);
   console.log(`\nDone. ${API}/catalog.json is up to date.`);
   process.exit(0);
 }

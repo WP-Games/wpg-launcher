@@ -589,6 +589,29 @@ translations, then `npm run sync`. English stays the key the game writes to
 **News panel.** The launcher fetches `https://whitephantomgames.co.uk/<lang>/rss.xml`
 (English: `/rss.xml`) and falls back to English if a language has no feed.
 
+### Android (phone download portal)
+
+There's no Android launcher app; phones get a web page instead, served by the
+Worker at **`https://api.whitephantomgames.co.uk/android`** (put that link on
+the website's download page and in Patreon/SubscribeStar posts). Players sign
+in with Patreon/SubscribeStar (or a code), see the newest APK their tier may
+have — same tier rules and Day-1/Day-4/Day-8 release windows as the desktop
+launcher — tick the 18+/EULA box and tap Download. Android installs the APK.
+Eight languages, phone-first layout. Code: `worker/src/android.mjs` (routes)
+and `worker/src/android-page.mjs` (page).
+
+**Publishing an Android build** (keep the APK under 2 GB):
+
+```powershell
+node tools/publish-android.mjs defending-lydia-collier <version> "D:\path\to\Game.apk" --notes "What changed" [--release-date 2026-11-08T18:00Z]
+npm run sync
+```
+
+That copies the APK to `cdn/games/<id>/android/<version>/` and records it in
+`catalog.json` → `games[].android` (newest first). `npm run sync` uploads it
+(by name, never re-uploaded). Release notes can be translated the same way as
+desktop notes (object keyed by language). Deploy the Worker once after pulling
+this feature: `npm run worker:deploy`.
 ### Cloudflare hardening (one-time, dashboard)
 
 - **Login routes are rate limited inside the Worker** (30 requests / 10 s per IP,

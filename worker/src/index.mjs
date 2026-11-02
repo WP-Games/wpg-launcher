@@ -11,6 +11,7 @@
  *   GET /games/<id>/versions/<v>/manifest.json      Bearer → 401 anon / 403 tier too low or
  *                                                   not yet in this tier's release window (X-Available-At)
  *   GET /games/<id>/objects/<sha256>                Bearer → file bytes (Range supported)
+ *   /android/…                                      phone download portal — see android.mjs
  *
  * Files come from the R2 bucket bound as CDN (uploaded by tools/sync-r2.mjs).
  * Tier rules come from tools/tiers.json, bundled at deploy time.
@@ -22,6 +23,7 @@ import cfg from "../../launcher.config.json";
 import { resolveCode } from "../../tools/codes-lib.mjs";
 import { withAccess, versionAccess, delayDaysFor } from "../../tools/access-lib.mjs";
 import { seal, open, randomHex } from "./crypto.mjs";
+import { handleAndroid } from "./android.mjs";
 
 const PROVIDERS = {
   patreon: {
@@ -45,6 +47,14 @@ export default {
     const url = new URL(request.url);
     const p = url.pathname;
     try {
+      if (p === "/android" || p.startsWith("/android/")) {
+        if (env.AUTH_LIMITER && (p === "/android/code" || p.startsWith("/android/login/"))) {
+          const ip = request.headers.get("cf-connecting-ip") || "unknown";
+          const { success } = await env.AUTH_LIMITER.limit({ key: ip });
+          if (!success) return text(429, "too many requests — please wait a moment");
+        }
+        return handleAndroid(request, env, url, ANDROID_DEPS);
+      }
       if (request.method === "POST" && p === "/auth/code") {
         if (env.AUTH_LIMITER) {
           const ip = request.headers.get("cf-connecting-ip") || "unknown";
@@ -238,12 +248,15 @@ async function serveGameFile(gameId, rest, request, env, ctx) {
 }
 
 let catalogCache = { at: 0, data: null };
-async function gameFromCatalog(env, gameId) {
+async function catalogData(env) {
   if (Date.now() - catalogCache.at > 30_000) {
     const obj = await env.CDN.get("catalog.json");
     catalogCache = { at: Date.now(), data: obj ? await obj.json() : { games: [] } };
   }
-  return catalogCache.data.games.find((g) => g.id === gameId) || null;
+  return catalogCache.data;
+}
+async function gameFromCatalog(env, gameId) {
+  return (await catalogData(env)).games.find((g) => g.id === gameId) || null;
 }
 
 async function serveR2(env, request, key, opts, ctx) {
@@ -285,3 +298,6 @@ const page = (status, title, msg) =>
     `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0e0f14;color:#eceef5;font:16px/1.5 system-ui,Segoe UI,sans-serif}div{text-align:center;padding:2rem;max-width:420px}h1{font-weight:600;margin:0 0 .5rem}p{opacity:.7;margin:0}</style></head><body><div><h1>${title}</h1><p>${msg}</p></div></body></html>`,
     { status, headers: { "content-type": "text/html; charset=utf-8" } },
   );
+
+// Everything the Android portal borrows from this file (keeps android.mjs free of circular imports).
+const ANDROID_DEPS = { PROVIDERS, tiers, cfg, seal, open, randomHex, resolveCode, withAccess, versionAccess, delayDaysFor, serveR2, gameFromCatalog, catalog: catalogData, text, json, page };
