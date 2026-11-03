@@ -612,6 +612,43 @@ That copies the APK to `cdn/games/<id>/android/<version>/` and records it in
 (by name, never re-uploaded). Release notes can be translated the same way as
 desktop notes (object keyed by language). Deploy the Worker once after pulling
 this feature: `npm run worker:deploy`.
+### Download stats (private, no personal data)
+
+The Worker counts downloads — nothing more: one row per day / version /
+platform / membership platform / tier, with no account IDs, names, IPs or
+user agents. You read them at **`https://api.whitephantomgames.co.uk/stats`**
+(any username + the `STATS_PASSWORD` secret), with 7 / 30 / 90-day and all-time
+views and a CSV link. Code: `worker/src/stats.mjs`.
+
+What you see:
+
+- **Launcher downloads** — clicks on `/launcher/download` (the website button), by Windows / Mac / Linux.
+- **Game downloads**, per game and version — one row per *Patreon · tier* or
+  *SubscribeStar · tier*, columns Windows / Mac / Linux / Android / Total. One
+  count = one manifest served to the desktop launcher (≈ one install or update;
+  the install dialog's size preview is de-duplicated in memory for ten minutes)
+  or one APK download from the Android portal.
+- **Alpha Testers** — every access code, lumped into one row.
+- **Creator (you)** — your own account on its own greyed line, left out of every total.
+- Steam and itch.io downloads never touch the Worker, so they're not here.
+
+**One-time setup**
+
+1. Cloudflare dashboard → *Storage & Databases → D1 SQL Database → Create* →
+   name `wpg-launcher-stats` (or in PowerShell, in `worker/`:
+   `npx wrangler d1 create wpg-launcher-stats`). Copy the database id.
+2. `launcher.config.json` → `server.statsDatabaseId`: paste the id.
+3. In `worker/`: `npx wrangler secret put STATS_PASSWORD` → any long password.
+4. `npm run worker:deploy`. The table creates itself on the first download.
+
+Counting starts the moment the Worker is deployed; nothing earlier can be
+recovered. Launchers older than 0.1.3 don't say which OS they run on, so their
+game downloads appear under **Unknown** until they self-update (0.1.3+ sends
+`(windows|macos|linux)` in its User-Agent — and nothing else).
+
+Leave `statsDatabaseId` empty and nothing is counted; `/stats` is a 404 until
+`STATS_PASSWORD` exists.
+
 ### Cloudflare hardening (one-time, dashboard)
 
 - **Login routes are rate limited inside the Worker** (30 requests / 10 s per IP,
@@ -645,6 +682,7 @@ GET  /auth/<provider>/start?redirect_uri=&state=          browser → provider l
 GET  /auth/me                      Authorization: Bearer  → {provider, displayName, avatar, tier, tierName, token?}
 GET  /games/<id>/versions/<v>/manifest.json   Bearer      401 if anon, 403 if tier < requiredTier
 GET  /games/<id>/objects/<sha256>             Bearer      file bytes (Range supported)
+GET  /stats | /stats.csv                      Basic auth  private download counts (STATS_PASSWORD)
 ```
 
 ## Tests

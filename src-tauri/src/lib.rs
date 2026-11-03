@@ -671,7 +671,8 @@ pub fn run() {
             let app_data = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_data)?;
             let client = reqwest::Client::builder()
-                .user_agent(format!("{}-Launcher/{}", config::config().launcher.product_name.replace(' ', ""), env!("CARGO_PKG_VERSION")))
+                // "(windows|macos|linux)" lets the server count game downloads per platform — nothing else is sent (worker/src/stats.mjs).
+                .user_agent(format!("{}-Launcher/{} ({})", config::config().launcher.product_name.replace(' ', ""), env!("CARGO_PKG_VERSION"), std::env::consts::OS))
                 .build()?;
             app.manage(AppState {
                 app_data,

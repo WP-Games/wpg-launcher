@@ -25,7 +25,10 @@
     "workerName": "wpg-launcher-api",
     "bucket": "wpg-cdn",
     "tokenDays": 7,
-    "authRateLimit": { "limit": 30, "period": 10 }
+    "authRateLimit": { "limit": 30, "period": 10 },
+    "$commentStats": "Download counts (README 'Download stats'). Paste the D1 database id here to switch counting on; leave empty to count nothing.",
+    "statsDatabaseName": "wpg-launcher-stats",
+    "statsDatabaseId": "924ba7cb-ee33-4c29-a7a0-1c9abbd20a4c"
   },
 
   "links": {

@@ -20,7 +20,7 @@ import { androidPage, pickLang } from "./android-page.mjs";
 const COOKIE = "wpg_session";
 const cookieHeader = (value, maxAge) => `${COOKIE}=${value}; Path=/android; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
 
-export async function handleAndroid(request, env, url, d) {
+export async function handleAndroid(request, env, url, d, ctx) {
   const p = url.pathname;
   const base = env.PUBLIC_URL;
   let m;
@@ -107,6 +107,10 @@ export async function handleAndroid(request, env, url, d) {
     if (!access.ok) return d.text(403, access.reason === "window" ? "not yet available for your tier" : "tier too low");
     const key = `games/${gameId}/android/${version}/${v.file}`;
     const res = await d.serveR2(env, request, key, { public: false, cache: "private, max-age=0" });
+    if ((res.status === 200 || res.status === 206) && request.method === "GET") {
+      // One APK download = one count (resume/Range continuations skipped). No personal data — see stats.mjs.
+      d.recordAndroidDownload?.(env, ctx, { session: s, gameId, version, rangeHeader: request.headers.get("range") });
+    }
     if (res.status === 200 || res.status === 206) {
       const h = new Headers(res.headers);
       h.set("content-type", "application/vnd.android.package-archive");

@@ -12,6 +12,7 @@
  *                                                   not yet in this tier's release window (X-Available-At)
  *   GET /games/<id>/objects/<sha256>                Bearer → file bytes (Range supported)
  *   /android/…                                      phone download portal — see android.mjs
+ *   GET /stats | /stats.csv                         private download counts (Basic auth, STATS_PASSWORD) — see stats.mjs
  *
  * Files come from the R2 bucket bound as CDN (uploaded by tools/sync-r2.mjs).
  * Tier rules come from tools/tiers.json, bundled at deploy time.
@@ -24,6 +25,7 @@ import { resolveCode } from "../../tools/codes-lib.mjs";
 import { withAccess, versionAccess, delayDaysFor } from "../../tools/access-lib.mjs";
 import { seal, open, randomHex } from "./crypto.mjs";
 import { handleAndroid } from "./android.mjs";
+import { handleStats, recordGameDownload, recordAndroidDownload, recordLauncherDownload } from "./stats.mjs";
 
 const PROVIDERS = {
   patreon: {
@@ -53,7 +55,7 @@ export default {
           const { success } = await env.AUTH_LIMITER.limit({ key: ip });
           if (!success) return text(429, "too many requests — please wait a moment");
         }
-        return handleAndroid(request, env, url, ANDROID_DEPS);
+        return handleAndroid(request, env, url, ANDROID_DEPS, ctx);
       }
       if (request.method === "POST" && p === "/auth/code") {
         if (env.AUTH_LIMITER) {
@@ -75,8 +77,16 @@ export default {
         if (!success) return text(429, "too many requests — please wait a moment");
       }
       if (p === "/auth/me") return authMe(request, env);
+      if (p === "/stats" || p === "/stats.csv") {
+        if (env.AUTH_LIMITER) {
+          const ip = request.headers.get("cf-connecting-ip") || "unknown";
+          const { success } = await env.AUTH_LIMITER.limit({ key: ip });
+          if (!success) return text(429, "too many requests — please wait a moment");
+        }
+        return handleStats(request, env, url, ANDROID_DEPS);
+      }
       // Launcher installers + updater feed (public). /launcher/download → newest installer.
-      if (p === "/launcher/download") return launcherDownload(env, request, url);
+      if (p === "/launcher/download") return launcherDownload(env, request, url, ctx);
       if (p === "/launcher/latest.json") return serveR2(env, request, "launcher/latest.json", { public: true, cache: "public, max-age=300" });
       if ((m = p.match(/^\/launcher\/([0-9][\w.-]*)\/([^/]+)$/))) return serveR2(env, request, `launcher/${m[1]}/${decodeURIComponent(m[2])}`, { public: true, cache: "public, max-age=31536000, immutable" });
       if (p === "/.well-known/security.txt") return text(200, SECURITY_TXT);
@@ -195,7 +205,7 @@ async function authMe(request, env) {
 /// /launcher/download[?platform=windows|mac|linux] → newest installer for that platform.
 /// Without ?platform= we guess from the browser's User-Agent and fall back to Windows.
 /// download.json: { version, windows: {url,file}, mac: {…}, linux: {…}, url, file }.
-async function launcherDownload(env, request, url) {
+async function launcherDownload(env, request, url, ctx) {
   const obj = await env.CDN.get("launcher/download.json");
   if (!obj) return text(404, "no launcher release yet");
   const d = await obj.json();
@@ -205,6 +215,7 @@ async function launcherDownload(env, request, url) {
   const wanted = url.searchParams.get("platform") || guess;
   const pick = d[wanted] || d.windows || d.mac || d.linux || (d.url ? { url: d.url } : null);
   if (!pick) return text(404, "no launcher release yet");
+  if (request.method === "GET") recordLauncherDownload(env, ctx, { platform: d[wanted] ? wanted : "windows", version: d.version }); // counts only — see stats.mjs
   return Response.redirect(pick.url, 302);
 }
 
@@ -223,8 +234,9 @@ async function serveGameFile(gameId, rest, request, env, ctx) {
     if (!game) return text(404, "unknown game");
     const required = game.requiredTier || 0;
     const vm = rest.match(/^versions\/([^/]+)\/manifest\.json$/);
+    let s = null;
     if (required > 0 || vm) {
-      const s = await session(request, env);
+      s = await session(request, env);
       if (!s) return text(401, "sign in required");
       const tier = s.acc?.tier || 0;
       if (tier < required) return text(403, "tier too low");
@@ -241,7 +253,10 @@ async function serveGameFile(gameId, rest, request, env, ctx) {
     }
     // Objects are content-addressed → immutable; manifests change per version → short cache.
     const cache = rest.startsWith("objects/") ? "private, max-age=31536000, immutable" : "private, max-age=60";
-    return serveR2(env, request, `games/${gameId}/${rest}`, { public: false, cache });
+    const res = await serveR2(env, request, `games/${gameId}/${rest}`, { public: false, cache });
+    // A manifest served = one install/update → add one to the download counters (no personal data; see stats.mjs).
+    if (vm && res.status === 200 && request.method === "GET") recordGameDownload(env, ctx, { session: s, gameId, version: decodeURIComponent(vm[1]), userAgent: request.headers.get("user-agent") });
+    return res;
   }
   // Artwork: public and cacheable at the edge.
   return serveR2(env, request, `games/${gameId}/${rest}`, { public: true, cache: "public, max-age=3600" }, ctx);
@@ -300,4 +315,4 @@ const page = (status, title, msg) =>
   );
 
 // Everything the Android portal borrows from this file (keeps android.mjs free of circular imports).
-const ANDROID_DEPS = { PROVIDERS, tiers, cfg, seal, open, randomHex, resolveCode, withAccess, versionAccess, delayDaysFor, serveR2, gameFromCatalog, catalog: catalogData, text, json, page };
+const ANDROID_DEPS = { PROVIDERS, tiers, cfg, seal, open, randomHex, resolveCode, withAccess, versionAccess, delayDaysFor, serveR2, gameFromCatalog, catalog: catalogData, text, json, page, recordAndroidDownload };
