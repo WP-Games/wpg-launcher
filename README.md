@@ -232,6 +232,8 @@ npm run sync                                        # upload cdn/ to the bucket
 ```
 
 Check: https://api.whitephantomgames.co.uk/health should say `wpg-launcher-api ok`
+(it returns 503 `degraded: file storage unavailable` if the R2 bucket can't be read —
+that's the address the uptime monitor / status page watches)
 and `/catalog.json` should show your games.
 
 Then in the launcher: **Settings → Content server** = `https://api.whitephantomgames.co.uk`.

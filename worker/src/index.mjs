@@ -68,7 +68,7 @@ export default {
       if (request.method !== "GET" && request.method !== "HEAD") return text(405, "method not allowed");
 
       let m;
-      if (p === "/" || p === "/health") return text(200, `${cfg.server.workerName} ok`);
+      if (p === "/" || p === "/health") return health(env);
       if (p === "/catalog.json") return serveR2(env, request, "catalog.json", { public: true, cache: "no-cache" });
       if (p === "/catalog.json.sig") return serveR2(env, request, "catalog.json.sig", { public: true, cache: "no-cache" });
       if (p.startsWith("/auth/") && env.AUTH_LIMITER) {
@@ -305,6 +305,23 @@ function guessType(key) {
 }
 
 // ---------- helpers ----------
+
+// For uptime monitors / the status page. Checks the worker *and* the R2 bucket
+// every download comes from, so it goes red when supporters can't download.
+// Deliberately doesn't call Patreon or SubscribeStar: their outages aren't
+// ours to report, and a status page that flaps with them would cry wolf.
+async function health(env) {
+  let ok = false;
+  try {
+    ok = (await env.CDN.head("catalog.json")) !== null;
+  } catch (e) {
+    console.error("health: R2 check failed", e);
+  }
+  return new Response(ok ? `${cfg.server.workerName} ok` : `${cfg.server.workerName} degraded: file storage unavailable`, {
+    status: ok ? 200 : 503,
+    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+  });
+}
 
 const text = (status, body) => new Response(body, { status, headers: { "content-type": "text/plain; charset=utf-8" } });
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
