@@ -6,7 +6,7 @@
  * Runs automatically before `npm run dev` / `npm run build` (see package.json).
  *
  *   cdn/catalog.json                         → src-tauri/bundled/catalog.json   (compiled into the exe)
- *   cdn/games/<id>/**  (except objects/, versions/) → src/bundled/games/<id>/** (artwork, achievements.json, ach icons)
+ *   cdn/games/<id>/**  (except objects/, versions/, android/) → src/bundled/games/<id>/** (artwork, achievements.json, ach icons)
  *   list of bundled files                    → src/bundled/index.json
  *
  * Game files themselves are never bundled — only the small stuff needed to
@@ -47,7 +47,8 @@ async function copyTree(srcDir, rel) {
   try { entries = await fs.readdir(srcDir, { withFileTypes: true }); } catch { return; }
   for (const e of entries) {
     if (e.isDirectory()) {
-      if (e.name === "objects" || e.name === "versions") continue;
+      // objects/ + versions/ = game files; android/ = the APKs (GBs) — never compiled into the launcher
+      if (e.name === "objects" || e.name === "versions" || e.name === "android") continue;
       await copyTree(path.join(srcDir, e.name), `${rel}/${e.name}`);
     } else if (e.isFile() && !e.name.startsWith(".")) {
       const key = `${rel}/${e.name}`;
