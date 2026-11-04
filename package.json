@@ -1,6 +1,6 @@
 {
   "name": "wpg-launcher",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "Steam-style launcher for Patreon/SubscribeStar games \u2014 Tauri desktop app, Cloudflare backend and publish tooling. Studio settings: launcher.config.json",
   "type": "module",

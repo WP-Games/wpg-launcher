@@ -91,6 +91,7 @@ const bridge = hasTauri
       listen: (evt, cb) => tauri.event.listen(evt, (e) => cb(e.payload)),
     }
   : makeMockBridge();
+let DEV_BUILD = false; // set from is_dev_build below; true only in `npm run dev` builds
 
 // ---------- state ----------
 const state = {
@@ -243,7 +244,7 @@ async function loadCatalog() {
     renderDetail();
     loadFeed();
   } catch (e) {
-    $("#detail-empty").innerHTML = `<div class="error"><p><b>${th("error.serverTitle")}</b></p><p class="muted">${th("error.serverBody")}</p><p>${escapeHtml(e)}</p><p class="muted small">For local testing run <code>npm run serve</code> in the project folder, then check Settings → Content server.</p></div>`;
+    $("#detail-empty").innerHTML = `<div class="error"><p><b>${th("error.serverTitle")}</b></p><p class="muted">${th("error.serverBody")}</p><p>${escapeHtml(e)}</p>${DEV_BUILD ? `<p class="muted small">For local testing run <code>npm run serve</code> in the project folder, then check Settings → Content server.</p>` : ""}</div>`;
     $("#detail-empty").classList.remove("hidden");
     $("#detail-content").classList.add("hidden");
   }
@@ -835,13 +836,15 @@ $("#btn-code").onclick = redeemCode;
 $("#input-code").addEventListener("keydown", (e) => { if (e.key === "Enter") redeemCode(); });
 
 // settings
+// Content server field: dev builds only (player builds always use the production server).
+bridge.invoke("is_dev_build").then((d) => { DEV_BUILD = !!d; $("#field-server").classList.toggle("hidden", !DEV_BUILD); }).catch(() => {});
 $("#btn-settings").onclick = () => {
   $("#input-server").value = state.settings.serverUrl;
   $("#terms-accepted-line").textContent = state.settings.acceptedTerms ? t("legal.accepted", { version: state.settings.acceptedTerms }) : "";
   openModal("#modal-settings");
 };
 $("#btn-save-settings").onclick = async () => {
-  await bridge.invoke("set_server_url", { url: $("#input-server").value });
+  if (DEV_BUILD) await bridge.invoke("set_server_url", { url: $("#input-server").value });
   state.settings = await bridge.invoke("get_settings");
   closeModals();
   await loadCatalog();
@@ -883,6 +886,7 @@ function makeMockBridge() {
     async invoke(cmd, args = {}) {
       switch (cmd) {
         case "get_settings": return { serverUrl, token: account ? "•••" : null, account, acceptedTerms, language };
+        case "is_dev_build": return true;
         case "set_server_url": return;
         case "set_language": language = args.language; return;
         case "accept_terms": acceptedTerms = args.version; return;

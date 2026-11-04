@@ -246,7 +246,9 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             // Production backend. For local testing against tools/serve.mjs,
-            // change it in Settings → Content server (http://127.0.0.1:8787).
+            // run a dev build (`npm run dev`) and change it in
+            // Settings → Content server (http://127.0.0.1:8787). Release builds
+            // ignore this field and always use the production server.
             server_url: crate::config::config().server.api_url.clone(),
             token: None,
             account: None,

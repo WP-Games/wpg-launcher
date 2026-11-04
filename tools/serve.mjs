@@ -251,7 +251,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, "127.0.0.1", () => {
   console.log(`${config.studio.name} local server`);
   console.log(`  CDN root : ${CDN}`);
-  console.log(`  Launcher : point Settings → Content server at http://127.0.0.1:${PORT}`);
+  console.log(`  Launcher : dev build (npm run dev) → Settings → Content server → http://127.0.0.1:${PORT}`);
   console.log(`  Preview  : http://127.0.0.1:${PORT}/  (UI in a browser, with fake downloads)`);
   console.log(`  Patreon  : ${REAL_PATREON ? `REAL login via client ${PATREON_CLIENT_ID.slice(0, 8)}… (${Object.keys(TIERS_CONFIG.patreon?.tiers || {}).length} tiers mapped in tools/tiers.json)` : "mock login (no .env)"}`);
   console.log();

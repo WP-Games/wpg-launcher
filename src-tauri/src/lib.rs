@@ -26,7 +26,14 @@ pub struct AppState {
 
 impl AppState {
     fn settings(&self) -> Settings {
-        store::load_settings(&self.app_data)
+        let mut s = store::load_settings(&self.app_data);
+        // Player (release) builds always talk to the production server from
+        // launcher.config.json, whatever settings.json says. Only dev builds
+        // (`npm run dev`) let Settings → Content server point elsewhere.
+        if !cfg!(debug_assertions) {
+            s.server_url = crate::config::config().server.api_url.clone();
+        }
+        s
     }
     fn installed(&self) -> InstalledDb {
         store::load_installed(&self.app_data)
@@ -87,8 +94,17 @@ fn get_settings(state: State<AppState>) -> Settings {
     s
 }
 
+/// True in dev builds (`npm run dev`): the UI shows Settings → Content server only then.
+#[tauri::command]
+fn is_dev_build() -> bool {
+    cfg!(debug_assertions)
+}
+
 #[tauri::command]
 fn set_server_url(state: State<AppState>, url: String) -> Result<(), String> {
+    if !cfg!(debug_assertions) {
+        return Err("The content server can only be changed in dev builds.".into());
+    }
     let mut s = state.settings();
     s.server_url = url.trim().trim_end_matches('/').to_string();
     store::save_settings(&state.app_data, &s).map_err(err)
@@ -684,6 +700,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_settings,
             set_server_url,
+            is_dev_build,
             accept_terms,
             set_language,
             quit_app,

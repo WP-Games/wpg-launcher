@@ -1,6 +1,6 @@
 [package]
 name = "wpg-launcher"
-version = "0.1.2"
+version = "0.1.3"
 description = "White Phantom Games Launcher"
 authors = ["White Phantom Games"]
 edition = "2021"

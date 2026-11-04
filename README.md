@@ -236,7 +236,9 @@ Check: https://api.whitephantomgames.co.uk/health should say `wpg-launcher-api o
 that's the address the uptime monitor / status page watches)
 and `/catalog.json` should show your games.
 
-Then in the launcher: **Settings → Content server** = `https://api.whitephantomgames.co.uk`.
+The launcher already points at `https://api.whitephantomgames.co.uk` (from `launcher.config.json`).
+Player builds (`npm run build`) always use it; **Settings → Content server** only appears in
+dev builds (`npm run dev`), for testing against `npm run serve` at `http://127.0.0.1:8787`.
 Sign in with Patreon or SubscribeStar — both are now real.
 
 ### Every update afterwards
